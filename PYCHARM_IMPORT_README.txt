@@ -1,27 +1,80 @@
-RPMS PYTHON PYCHARM PROJECT
-===========================
+RPMS PYTHON PROJECT - PYCHARM SETUP
+==================================
 
-1. Extract RPMS_Python_PyCharm_Project.zip
-2. Open PyCharm
-3. File > Open
-4. Select folder: RPMS_Python_PyCharm
-5. Select/Open the project
-6. Configure Python interpreter if PyCharm asks
-7. Open Terminal
-8. Run:
-   pip install -r requirements.txt
-9. Check database configuration:
-   rpms/util/db_connection.py
-10. Run:
-   rpms/app/main.py
+1. Clone or download the RPMS_Python_Project repository.
+2. Open PyCharm.
+3. Select File > Open.
+4. Select the RPMS project folder.
+5. Configure the Python interpreter if PyCharm asks.
 
-Current database name:
-recruitment_portal
+FIRST TIME SETUP
+----------------
 
-Default configuration:
-host=localhost
-port=3306
-user=root
-password=root
+Open the PyCharm Terminal and run:
 
-Change password if required.
+    python -m venv .venv
+    .venv\Scripts\activate
+    pip install -r requirements.txt
+
+DATABASE CONFIGURATION
+---------------------
+
+Database name:
+    recruitment_portal
+
+Database:
+    MySQL
+
+Check database configuration:
+    rpms/util/db_connection.py
+
+Configure the following environment variables
+before starting the application:
+
+    RPMS_DB_HOST
+    RPMS_DB_PORT
+    RPMS_DB_USER
+    RPMS_DB_PASSWORD
+    RPMS_DB_NAME
+    RPMS_SECRET_KEY
+
+Never store database passwords or secret keys
+directly in project source files.
+
+DATABASE SETUP
+--------------
+
+Execute the SQL scripts in this order:
+
+1. sql/rpms_schema.sql
+2. sql/rpms_sample_data.sql
+
+WARNING:
+    rpms_full_setup.sql contains DROP DATABASE IF EXISTS.
+    Use it only when intentionally resetting a disposable
+    development database.
+
+RUN THE WEB APPLICATION
+-----------------------
+
+    python web_app.py
+
+Open the browser:
+
+    http://127.0.0.1:5000
+
+CONSOLE APPLICATION
+-------------------
+
+The separate console application can be started using:
+
+    python main.py
+
+IMPORTANT
+---------
+
+The web application entry point is web_app.py.
+The console application entry point is main.py.
+
+Configure valid demo user password hashes before attempting
+to log in with seeded demo accounts.

@@ -1,61 +1,90 @@
-RPMS PYTHON - VS CODE SETUP
-===========================
+RPMS PYTHON PROJECT - VS CODE SETUP
+===================================
 
-1. Extract RPMS_Python_VSCode_Project.zip
-2. Open Visual Studio Code
-3. File > Open Folder
-4. Select folder: RPMS_Python_VSCode
+1. Clone or download the RPMS_Python_Project repository.
+2. Open Visual Studio Code.
+3. Select File > Open Folder.
+4. Select the RPMS project folder.
 
 FIRST TIME SETUP
 ----------------
-Open Terminal in VS Code and run:
 
-Windows:
-    py -m venv .venv
-    .venv\Scripts\activate
-    pip install -r requirements.txt
+Open the VS Code terminal and run:
 
-If 'py' command is unavailable:
     python -m venv .venv
     .venv\Scripts\activate
     pip install -r requirements.txt
 
-DATABASE
---------
-Current database name:
+If Python is not recognized, try:
+
+    py -m venv .venv
+    .venv\Scripts\activate
+    pip install -r requirements.txt
+
+DATABASE CONFIGURATION
+----------------------
+
+Database name:
     recruitment_portal
 
-Check:
+Database:
+    MySQL
+
+Configuration file:
     rpms/util/db_connection.py
 
-Default values:
-    host = localhost
-    port = 3306
-    user = root
-    password = root
+Required environment variables:
 
-Change the password according to your MySQL installation.
+    RPMS_DB_HOST
+    RPMS_DB_PORT
+    RPMS_DB_USER
+    RPMS_DB_PASSWORD
+    RPMS_DB_NAME
+    RPMS_SECRET_KEY
 
-RUN
----
-Easy method:
+Configure these variables in your local environment.
+Do not commit actual credentials to GitHub.
+
+DATABASE SETUP
+--------------
+
+Execute these SQL scripts in MySQL Workbench:
+
+1. sql/rpms_schema.sql
+2. sql/rpms_sample_data.sql
+
+WARNING:
+    sql/rpms_full_setup.sql contains DROP DATABASE IF EXISTS.
+    Use it only when intentionally resetting a disposable
+    development database.
+
+RUN THE WEB APPLICATION
+-----------------------
+
+    python web_app.py
+
+Open the browser:
+
+    http://127.0.0.1:5000
+
+CONSOLE APPLICATION
+-------------------
+
+To run the separate console application:
+
     python main.py
-
-OR:
-    python -m rpms.app.main
-
-OR press F5 and choose:
-    Run RPMS
 
 REQUIRED VS CODE EXTENSIONS
 ---------------------------
+
 - Python (Microsoft)
 - Python Debugger (Microsoft)
 
-DATABASE SCRIPT
----------------
-If required, execute:
-    sql/rpms_full_setup.sql
+IMPORTANT
+---------
 
-The SQL file in this VS Code project uses database:
-    recruitment_portal
+web_app.py is the main web application entry point.
+main.py is the separate console application entry point.
+
+The seeded demo accounts contain placeholder password hashes.
+Configure valid password hashes before attempting demo login.
