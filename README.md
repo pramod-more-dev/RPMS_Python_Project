@@ -1,4 +1,4 @@
-﻿# Recruitment & Placement Management System (RPMS)
+# Recruitment & Placement Management System (RPMS)
 
 A Python-based Recruitment and Placement Management System built using Flask, MySQL, HTML, CSS, and JavaScript.
 
