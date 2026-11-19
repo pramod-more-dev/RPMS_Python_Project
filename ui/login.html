@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+
+    <main class="login-container">
+
+        <section class="login-brand">
+
+            <div style="
+                background: white;
+                width: 180px;
+                height: 180px;
+                padding: 10px;
+                margin: 0 auto 20px;
+                border-radius: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <img
+                    src="images/logo.png"
+                    alt="Kiran Academy Logo"
+                    style="width: 100%; height: 100%; object-fit: contain;"
+                >
+            </div>
+
+            <h1>Recruitment & Placement Management System</h1>
+            <p>Smart Recruitment. Better Opportunities.</p>
+
+        </section>
+
+        <section class="login-card">
+
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Sign in to access your dashboard</p>
+
+            <form id="loginForm">
+
+                <div class="form-group">
+                    <label for="email">Email Address / Username</label>
+                    <input
+                        type="text"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email or username"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <div class="login-options">
+                    <label>
+                        <input type="checkbox" id="remember" name="remember">
+                        Remember me
+                    </label>
+                    <a href="#" onclick="return false;">Forgot Password?</a>
+                </div>
+
+                <p
+                    id="loginMessage"
+                    role="alert"
+                    aria-live="polite"
+                    style="display:none; color:#dc3545; margin-bottom:12px;"
+                ></p>
+
+                <button type="submit" class="btn-primary" id="loginButton">
+                    Sign In
+                </button>
+
+            </form>
+
+            <p class="login-footer">
+                Recruitment & Placement Management System
+            </p>
+
+        </section>
+
+    </main>
+
+    <script>
+        const loginForm = document.getElementById("loginForm");
+        const loginButton = document.getElementById("loginButton");
+        const loginMessage = document.getElementById("loginMessage");
+
+        loginForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const identifier = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const remember = document.getElementById("remember").checked;
+
+            loginMessage.style.display = "none";
+            loginMessage.textContent = "";
+
+            loginButton.disabled = true;
+            loginButton.textContent = "Signing In...";
+
+            try {
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        identifier: identifier,
+                        password: password,
+                        remember: remember
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Login failed. Please check your credentials."
+                    );
+                }
+
+                window.location.href = "/dashboard.html";
+
+            } catch (error) {
+                loginMessage.textContent =
+                    error.message || "Unable to connect to the server.";
+
+                loginMessage.style.display = "block";
+
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = "Sign In";
+            }
+        });
+    </script>
+
+</body>
+</html>

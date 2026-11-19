@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Job Form</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .job-form-content { padding:25px; max-width:1050px; }
+        .job-form-card { background:white; padding:25px; border-radius:10px; }
+        .form-grid {
+            display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:17px;
+        }
+        .form-group { display:flex; flex-direction:column; gap:7px; }
+        .form-group label { font-weight:600; color:#374151; }
+        .form-group input, .form-group select, .form-group textarea {
+            width:100%; padding:11px; border:1px solid #d1d5db;
+            border-radius:6px; font:inherit;
+        }
+        .form-group textarea { min-height:75px; resize:vertical; }
+        .form-section {
+            grid-column:1/-1; margin-top:14px; padding-bottom:9px;
+            border-bottom:1px solid #e5e7eb; color:#1e3a8a;
+        }
+        .form-actions { display:flex; gap:12px; margin-top:25px; }
+        .form-message { margin:15px 0; }
+        @media(max-width:650px) {
+            .form-grid { grid-template-columns:1fr; }
+            .job-form-content { padding:14px; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>RPMS</h2>
+            <p>Recruitment & Placement</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html">Candidates</a>
+            <a href="companies.html">Companies</a>
+            <a href="jobs.html" class="active">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h2 id="pageTitle">Add New Job</h2>
+                <p>Create and manage job opportunities</p>
+            </div>
+            <a href="jobs.html" class="btn btn-primary">Back to Jobs</a>
+        </header>
+
+        <section class="job-form-content">
+            <div class="job-form-card">
+                <div class="form-message" id="message"></div>
+
+                <form id="jobForm">
+                    <div class="form-grid">
+
+                        <h3 class="form-section">Basic Job Details</h3>
+
+                        <div class="form-group">
+                            <label for="job_code">Job Code *</label>
+                            <input id="job_code" maxlength="40" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="company_id">Company *</label>
+                            <select id="company_id" required>
+                                <option value="">Select Company</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="job_title">Job Title *</label>
+                            <input id="job_title" maxlength="150" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="employment_type">Employment Type *</label>
+                            <select id="employment_type" required>
+                                <option value="FULL_TIME">Full Time</option>
+                                <option value="PART_TIME">Part Time</option>
+                                <option value="CONTRACT">Contract</option>
+                                <option value="INTERNSHIP">Internship</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Job Location *</label>
+                            <input id="location" maxlength="120" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="openings">Number of Openings *</label>
+                            <input type="number" id="openings" min="1" value="1" required>
+                        </div>
+
+                        <h3 class="form-section">Salary & Eligibility</h3>
+
+                        <div class="form-group">
+                            <label for="min_package_lpa">Minimum Package (LPA)</label>
+                            <input type="number" id="min_package_lpa" min="0" step="0.01">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="max_package_lpa">Maximum Package (LPA)</label>
+                            <input type="number" id="max_package_lpa" min="0" step="0.01">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="min_percentage">Minimum Percentage</label>
+                            <input type="number" id="min_percentage" min="0" max="100" step="0.01">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="max_backlogs">Maximum Backlogs</label>
+                            <input type="number" id="max_backlogs" min="0" value="0" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="min_passing_year">Minimum Passing Year</label>
+                            <input type="number" id="min_passing_year" min="2000" max="2100">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="max_passing_year">Maximum Passing Year</label>
+                            <input type="number" id="max_passing_year" min="2000" max="2100">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="experience_min_years">Minimum Experience (Years)</label>
+                            <input type="number" id="experience_min_years" min="0" step="0.1" value="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="qualification_rule">Qualification Rule</label>
+                            <input id="qualification_rule" maxlength="255"
+                                   placeholder="BE/BTech/BCA/BSc/MCA">
+                        </div>
+
+                        <h3 class="form-section">Dates & Job Status</h3>
+
+                        <div class="form-group">
+                            <label for="posted_date">Posted Date *</label>
+                            <input type="date" id="posted_date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="application_deadline">Application Deadline *</label>
+                            <input type="date" id="application_deadline" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">Job Status *</label>
+                            <select id="status" required>
+                                <option value="DRAFT">Draft</option>
+                                <option value="OPEN" selected>Open</option>
+                                <option value="CLOSED">Closed</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="creatorGroup">
+                            <label for="created_by">Created By (User ID) *</label>
+                            <select id="created_by" required>
+                                <option value="">Select Creator</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="saveButton">
+                            Save Job
+                        </button>
+                        <a href="jobs.html" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const jobId = params.get("id");
+const isEdit = Boolean(jobId);
+
+const form = document.getElementById("jobForm");
+const message = document.getElementById("message");
+
+const fields = [
+    "job_code", "company_id", "job_title", "employment_type",
+    "location", "openings", "min_package_lpa", "max_package_lpa",
+    "min_percentage", "min_passing_year", "max_passing_year",
+    "max_backlogs", "experience_min_years", "qualification_rule",
+    "posted_date", "application_deadline", "status", "created_by"
+];
+
+function value(id) {
+    return document.getElementById(id).value;
+}
+
+function setValue(id, val) {
+    document.getElementById(id).value = val ?? "";
+}
+
+function showMessage(text, success = false) {
+    message.textContent = text;
+    message.style.color = success ? "#15803d" : "#dc2626";
+}
+
+function optionalNumber(id) {
+    const val = value(id);
+    return val === "" ? null : Number(val);
+}
+
+async function loadCompanies() {
+    const response = await fetch("/api/companies");
+    const companies = await response.json();
+
+    if (!response.ok) throw new Error(companies.error || "Unable to load companies");
+
+    const select = document.getElementById("company_id");
+
+    companies.forEach(company => {
+        if (company.status !== "ACTIVE") return;
+
+        const option = document.createElement("option");
+        option.value = company.company_id;
+        option.textContent = `${company.company_name} (${company.company_code})`;
+        select.appendChild(option);
+    });
+}
+
+async function loadCreators() {
+    const select = document.getElementById("created_by");
+
+    for (let id = 1; id <= 5; id++) {
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = `User ${id}`;
+        select.appendChild(option);
+    }
+}
+
+async function loadJob() {
+    const response = await fetch(`/api/jobs/${jobId}`);
+    const job = await response.json();
+
+    if (!response.ok) throw new Error(job.error || "Unable to load job");
+
+    fields.forEach(field => setValue(field, job[field]));
+
+    document.getElementById("pageTitle").textContent = "Edit Job";
+    document.getElementById("saveButton").textContent = "Update Job";
+
+    document.getElementById("creatorGroup").style.display = "none";
+    document.getElementById("created_by").required = false;
+}
+
+form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const data = {
+        job_code: value("job_code").trim(),
+        company_id: Number(value("company_id")),
+        job_title: value("job_title").trim(),
+        employment_type: value("employment_type"),
+        location: value("location").trim(),
+        openings: Number(value("openings")),
+        min_package_lpa: optionalNumber("min_package_lpa"),
+        max_package_lpa: optionalNumber("max_package_lpa"),
+        min_percentage: optionalNumber("min_percentage"),
+        min_passing_year: optionalNumber("min_passing_year"),
+        max_passing_year: optionalNumber("max_passing_year"),
+        max_backlogs: Number(value("max_backlogs")),
+        experience_min_years: Number(value("experience_min_years")),
+        qualification_rule: value("qualification_rule").trim() || null,
+        posted_date: value("posted_date"),
+        application_deadline: value("application_deadline"),
+        status: value("status")
+    };
+
+    if (!isEdit) {
+        data.created_by = Number(value("created_by"));
+    }
+
+    if (data.min_package_lpa !== null &&
+        data.max_package_lpa !== null &&
+        data.min_package_lpa > data.max_package_lpa) {
+        showMessage("Minimum package cannot exceed maximum package.");
+        return;
+    }
+
+    if (data.application_deadline < data.posted_date) {
+        showMessage("Application deadline cannot be before posted date.");
+        return;
+    }
+
+    const button = document.getElementById("saveButton");
+    button.disabled = true;
+    button.textContent = "Saving...";
+
+    try {
+        const response = await fetch(
+            isEdit ? `/api/jobs/${jobId}` : "/api/jobs",
+            {
+                method: isEdit ? "PUT" : "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Unable to save job");
+        }
+
+        showMessage(result.message || "Job saved successfully", true);
+
+        setTimeout(() => {
+            window.location.href = "jobs.html";
+        }, 900);
+
+    } catch (error) {
+        showMessage(error.message);
+        button.disabled = false;
+        button.textContent = isEdit ? "Update Job" : "Save Job";
+    }
+});
+
+async function initialize() {
+    try {
+        await loadCompanies();
+        await loadCreators();
+
+        if (isEdit) {
+            await loadJob();
+        } else {
+            const today = new Date().toISOString().split("T")[0];
+            setValue("posted_date", today);
+            setValue("application_deadline", today);
+        }
+    } catch (error) {
+        showMessage(error.message);
+    }
+}
+
+initialize();
+</script>
+</body>
+</html>

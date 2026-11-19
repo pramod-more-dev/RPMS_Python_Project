@@ -1,0 +1,914 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Placement Process</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .placement-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .placement-actions select,
+        .inline-select,
+        .inline-date {
+            padding: 7px;
+            border: 1px solid #d7ded9;
+            border-radius: 6px;
+            font-size: 12px;
+            max-width: 145px;
+        }
+
+        .small-action {
+            border: none;
+            border-radius: 6px;
+            padding: 8px 11px;
+            cursor: pointer;
+            background: #176b45;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .small-action:hover {
+            background: #105536;
+        }
+
+        .small-action:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .secondary-action {
+            background: #eaf1ed;
+            color: #176b45;
+        }
+
+        .secondary-action:hover {
+            background: #dce9e0;
+        }
+
+        .status-select {
+            min-width: 125px;
+        }
+
+        .form-message {
+            display: none;
+            margin-top: 14px;
+            padding: 11px 14px;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        .form-message.show {
+            display: block;
+        }
+
+        .form-message.success {
+            background: #e7f6ec;
+            color: #176b45;
+        }
+
+        .form-message.error {
+            background: #fdeaea;
+            color: #b42318;
+        }
+
+        .empty-row {
+            text-align: center;
+            padding: 25px !important;
+            color: #777;
+        }
+
+        .form-note {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .table-wrapper table {
+            min-width: 950px;
+        }
+
+        @media (max-width: 768px) {
+            .placement-actions {
+                min-width: 180px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div>
+                <h2>RPMS</h2>
+                <p>Placement System</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html">Candidates</a>
+            <a href="companies.html">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html" class="active">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+
+        <a href="login.html" class="logout-link">Logout</a>
+    </aside>
+
+    <main class="dashboard-main">
+
+        <header class="topbar">
+            <div>
+                <h1>Placement Management</h1>
+                <p>Manage job offers and candidate joining records</p>
+            </div>
+
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div>
+                    <strong>Admin User</strong>
+                    <p>Administrator</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-toolbar">
+            <div>
+                <h2>Placement Overview</h2>
+                <p>Track offers, acceptance and final placements</p>
+            </div>
+        </section>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📄</div>
+                <p>Total Offers</p>
+                <h2 id="totalOffers">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✓</div>
+                <p>Accepted Offers</p>
+                <h2 id="acceptedOffers">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <p>Placed Candidates</p>
+                <h2 id="totalPlacements">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <p>Joining Pending</p>
+                <h2 id="joiningPending">0</h2>
+            </div>
+        </section>
+
+        <!-- OFFER MANAGEMENT -->
+
+        <section class="content-card">
+            <div class="section-heading">
+                <h2>Offer Management</h2>
+                <span class="record-count" id="offerCount">0 Offers</span>
+            </div>
+
+            <div class="filter-bar">
+                <input
+                    type="text"
+                    id="offerSearch"
+                    placeholder="Search offer, candidate, company or role"
+                >
+
+                <select id="offerStatusFilter">
+                    <option value="">All Offer Statuses</option>
+                    <option value="OFFERED">Offered</option>
+                    <option value="ACCEPTED">Accepted</option>
+                    <option value="REJECTED">Rejected</option>
+                    <option value="EXPIRED">Expired</option>
+                    <option value="WITHDRAWN">Withdrawn</option>
+                </select>
+
+                <button type="button" class="action-button" id="refreshButton">
+                    Refresh
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Offer Code</th>
+                            <th>Candidate</th>
+                            <th>Company</th>
+                            <th>Designation</th>
+                            <th>Package (LPA)</th>
+                            <th>Offer Date</th>
+                            <th>Offer Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="offersTableBody">
+                        <tr>
+                            <td colspan="8" class="empty-row">Loading offers...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PLACEMENT MANAGEMENT -->
+
+        <section class="content-card">
+            <div class="section-heading">
+                <h2>Final Placement Records</h2>
+                <span class="record-count" id="placementCount">0 Placements</span>
+            </div>
+
+            <div class="filter-bar">
+                <input
+                    type="text"
+                    id="placementSearch"
+                    placeholder="Search candidate, company or role"
+                >
+
+                <select id="joiningStatusFilter">
+                    <option value="">All Joining Statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="JOINED">Joined</option>
+                    <option value="NOT_JOINED">Not Joined</option>
+                    <option value="DEFERRED">Deferred</option>
+                    <option value="NO_SHOW">No Show</option>
+                </select>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Placement ID</th>
+                            <th>Candidate</th>
+                            <th>Company</th>
+                            <th>Job Role</th>
+                            <th>Package (LPA)</th>
+                            <th>Expected Joining</th>
+                            <th>Actual Joining</th>
+                            <th>Joining Status</th>
+                            <th>Placement Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="placementsTableBody">
+                        <tr>
+                            <td colspan="10" class="empty-row">Loading placements...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- CREATE OFFER -->
+
+        <section class="content-card">
+            <div class="section-heading">
+                <h2>Record New Offer</h2>
+            </div>
+
+            <form id="offerForm">
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="applicationId">Selected Application *</label>
+                        <select id="applicationId" required>
+                            <option value="">Loading selected applications...</option>
+                        </select>
+                        <p class="form-note">
+                            Only applications with SELECTED status are eligible.
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="offerCode">Offer Code *</label>
+                        <input
+                            type="text"
+                            id="offerCode"
+                            maxlength="40"
+                            placeholder="OFF-007"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="designation">Designation *</label>
+                        <input
+                            type="text"
+                            id="designation"
+                            maxlength="120"
+                            placeholder="Python Developer"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="package">Offered Package (LPA) *</label>
+                        <input
+                            type="number"
+                            id="package"
+                            min="0"
+                            max="9999.99"
+                            step="0.01"
+                            placeholder="4.50"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="offerDate">Offer Date *</label>
+                        <input type="date" id="offerDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expectedJoiningDate">Expected Joining Date</label>
+                        <input type="date" id="expectedJoiningDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="remarks">Remarks</label>
+                        <input
+                            type="text"
+                            id="remarks"
+                            maxlength="500"
+                            placeholder="Optional remarks"
+                        >
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="action-button" id="saveOfferButton">
+                        Save Offer
+                    </button>
+
+                    <button type="reset" class="reset-button">
+                        Reset Form
+                    </button>
+                </div>
+
+                <div id="offerMessage" class="form-message"></div>
+            </form>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    const offersTableBody = document.getElementById("offersTableBody");
+    const placementsTableBody = document.getElementById("placementsTableBody");
+
+    let offersData = [];
+    let placementsData = [];
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[character]);
+    }
+
+    function formatDate(value) {
+        if (!value) return "-";
+
+        const dateValue = new Date(value + "T00:00:00");
+
+        if (Number.isNaN(dateValue.getTime())) {
+            return value;
+        }
+
+        return dateValue.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+    }
+
+    function formatPackage(value) {
+        return Number(value || 0).toFixed(2);
+    }
+
+    function statusClass(status) {
+        const value = String(status || "").toUpperCase();
+
+        if (["ACCEPTED", "JOINED", "ACTIVE"].includes(value)) {
+            return "success";
+        }
+
+        if (["OFFERED", "PENDING", "DEFERRED"].includes(value)) {
+            return "warning";
+        }
+
+        if (["REJECTED", "WITHDRAWN", "EXPIRED", "NO_SHOW",
+             "NOT_JOINED", "CANCELLED"].includes(value)) {
+            return "danger";
+        }
+
+        return "";
+    }
+
+    function showMessage(elementId, message, type) {
+        const element = document.getElementById(elementId);
+
+        element.textContent = message;
+        element.className = "form-message show " + type;
+    }
+
+    function clearMessage(elementId) {
+        const element = document.getElementById(elementId);
+
+        element.textContent = "";
+        element.className = "form-message";
+    }
+
+    async function apiRequest(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            }
+        });
+
+        let result;
+
+        try {
+            result = await response.json();
+        } catch {
+            result = {};
+        }
+
+        if (!response.ok) {
+            throw new Error(result.error || result.message || "Request failed");
+        }
+
+        return result;
+    }
+
+    async function loadStatistics() {
+        const [offerStats, placementStats] = await Promise.all([
+            apiRequest("/api/offers/statistics"),
+            apiRequest("/api/placements/statistics")
+        ]);
+
+        document.getElementById("totalOffers").textContent =
+            offerStats.total_offers || 0;
+
+        document.getElementById("acceptedOffers").textContent =
+            offerStats.accepted_offers || 0;
+
+        document.getElementById("totalPlacements").textContent =
+            placementStats.total_placements || 0;
+
+        document.getElementById("joiningPending").textContent =
+            placementStats.pending_count || 0;
+    }
+
+    async function loadOffers() {
+        const search = document.getElementById("offerSearch").value.trim();
+        const status = document.getElementById("offerStatusFilter").value;
+
+        const params = new URLSearchParams();
+
+        if (search) params.set("search", search);
+        if (status) params.set("status", status);
+
+        offersTableBody.innerHTML =
+            '<tr><td colspan="8" class="empty-row">Loading offers...</td></tr>';
+
+        try {
+            offersData = await apiRequest("/api/offers?" + params.toString());
+
+            document.getElementById("offerCount").textContent =
+                offersData.length + " Offers";
+
+            renderOffers();
+
+        } catch (error) {
+            offersTableBody.innerHTML =
+                `<tr><td colspan="8" class="empty-row">${escapeHTML(error.message)}</td></tr>`;
+        }
+    }
+
+    function renderOffers() {
+        if (!offersData.length) {
+            offersTableBody.innerHTML =
+                '<tr><td colspan="8" class="empty-row">No offers found</td></tr>';
+            return;
+        }
+
+        offersTableBody.innerHTML = offersData.map(offer => {
+            const status = String(offer.offer_status || "").toUpperCase();
+
+            const statusOptions = [
+                "OFFERED", "ACCEPTED", "REJECTED", "EXPIRED", "WITHDRAWN"
+            ];
+
+            const options = statusOptions.map(option => `
+                <option value="${option}" ${status === option ? "selected" : ""}>
+                    ${option.replaceAll("_", " ")}
+                </option>
+            `).join("");
+
+            const placementExists = placementsData.some(
+                placement => Number(placement.offer_id) === Number(offer.offer_id)
+            );
+
+            let placementButton = "";
+
+            if (status === "ACCEPTED" && !placementExists) {
+                placementButton = `
+                    <button class="small-action"
+                        onclick="createPlacement(${Number(offer.offer_id)})">
+                        Create Placement
+                    </button>
+                `;
+            } else if (placementExists) {
+                placementButton = `
+                    <span class="status-badge success">Placement Created</span>
+                `;
+            }
+
+            return `
+                <tr>
+                    <td>${escapeHTML(offer.offer_code)}</td>
+                    <td>${escapeHTML(offer.candidate_name)}</td>
+                    <td>${escapeHTML(offer.company_name)}</td>
+                    <td>${escapeHTML(offer.designation)}</td>
+                    <td>${formatPackage(offer.offered_package_lpa)}</td>
+                    <td>${formatDate(offer.offer_date)}</td>
+                    <td>
+                        <span class="status-badge ${statusClass(status)}">
+                            ${escapeHTML(status.replaceAll("_", " "))}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="placement-actions">
+                            <select class="inline-select status-select"
+                                id="offer-status-${Number(offer.offer_id)}"
+                                ${["REJECTED", "EXPIRED", "WITHDRAWN"].includes(status) ? "disabled" : ""}>
+                                ${options}
+                            </select>
+
+                            <button class="small-action secondary-action"
+                                onclick="updateOfferStatus(${Number(offer.offer_id)})"
+                                ${["REJECTED", "EXPIRED", "WITHDRAWN"].includes(status) ? "disabled" : ""}>
+                                Update
+                            </button>
+
+                            ${placementButton}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    async function loadPlacements() {
+        const search = document.getElementById("placementSearch").value.trim();
+        const joiningStatus = document.getElementById("joiningStatusFilter").value;
+
+        const params = new URLSearchParams();
+
+        if (search) params.set("search", search);
+        if (joiningStatus) params.set("joining_status", joiningStatus);
+
+        placementsTableBody.innerHTML =
+            '<tr><td colspan="10" class="empty-row">Loading placements...</td></tr>';
+
+        try {
+            placementsData = await apiRequest(
+                "/api/placements?" + params.toString()
+            );
+
+            document.getElementById("placementCount").textContent =
+                placementsData.length + " Placements";
+
+            renderPlacements();
+
+        } catch (error) {
+            placementsTableBody.innerHTML =
+                `<tr><td colspan="10" class="empty-row">${escapeHTML(error.message)}</td></tr>`;
+        }
+    }
+
+    function renderPlacements() {
+        if (!placementsData.length) {
+            placementsTableBody.innerHTML =
+                '<tr><td colspan="10" class="empty-row">No placement records found</td></tr>';
+            return;
+        }
+
+        placementsTableBody.innerHTML = placementsData.map(placement => {
+            const joiningStatus = String(placement.joining_status || "PENDING");
+            const placementStatus = String(placement.placement_status || "ACTIVE");
+
+            const joiningOptions = [
+                "PENDING", "JOINED", "NOT_JOINED", "DEFERRED", "NO_SHOW"
+            ].map(option => `
+                <option value="${option}" ${joiningStatus === option ? "selected" : ""}>
+                    ${option.replaceAll("_", " ")}
+                </option>
+            `).join("");
+
+            const placementOptions = ["ACTIVE", "CANCELLED"].map(option => `
+                <option value="${option}" ${placementStatus === option ? "selected" : ""}>
+                    ${option}
+                </option>
+            `).join("");
+
+            return `
+                <tr>
+                    <td>${Number(placement.placement_id)}</td>
+                    <td>${escapeHTML(placement.candidate_name)}</td>
+                    <td>${escapeHTML(placement.company_name)}</td>
+                    <td>${escapeHTML(placement.designation || placement.job_title)}</td>
+                    <td>${formatPackage(placement.final_package_lpa)}</td>
+                    <td>${formatDate(placement.expected_joining_date)}</td>
+                    <td>${formatDate(placement.actual_joining_date)}</td>
+                    <td>
+                        <span class="status-badge ${statusClass(joiningStatus)}">
+                            ${escapeHTML(joiningStatus.replaceAll("_", " "))}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${statusClass(placementStatus)}">
+                            ${escapeHTML(placementStatus)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="placement-actions">
+                            <select class="inline-select"
+                                id="joining-${Number(placement.placement_id)}">
+                                ${joiningOptions}
+                            </select>
+
+                            <input class="inline-date"
+                                type="date"
+                                id="actual-date-${Number(placement.placement_id)}"
+                                value="${escapeHTML(placement.actual_joining_date || "")}"
+                                title="Actual joining date">
+
+                            <button class="small-action"
+                                onclick="updateJoining(${Number(placement.placement_id)})">
+                                Save Joining
+                            </button>
+
+                            <select class="inline-select"
+                                id="placement-status-${Number(placement.placement_id)}">
+                                ${placementOptions}
+                            </select>
+
+                            <button class="small-action secondary-action"
+                                onclick="updatePlacementStatus(${Number(placement.placement_id)})">
+                                Save Status
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    async function loadSelectedApplications() {
+        const select = document.getElementById("applicationId");
+
+        try {
+            const applications = await apiRequest(
+                "/api/applications?status=SELECTED"
+            );
+
+            select.innerHTML = '<option value="">Select Application</option>';
+
+            applications.forEach(application => {
+                const option = document.createElement("option");
+
+                option.value = application.application_id;
+
+                const candidateName =
+                    application.candidate_name || "Candidate";
+
+                const jobTitle =
+                    application.job_title || "Job";
+
+                const companyName =
+                    application.company_name || "";
+
+                option.textContent =
+                    `${application.application_code || "APP"} - ${candidateName} - ${jobTitle} ${companyName ? "- " + companyName : ""}`;
+
+                select.appendChild(option);
+            });
+
+            if (!applications.length) {
+                select.innerHTML =
+                    '<option value="">No selected applications available</option>';
+            }
+
+        } catch (error) {
+            select.innerHTML =
+                '<option value="">Unable to load applications</option>';
+
+            console.error(error);
+        }
+    }
+
+    async function updateOfferStatus(offerId) {
+        const select = document.getElementById("offer-status-" + offerId);
+
+        if (!select) return;
+
+        try {
+            await apiRequest(`/api/offers/${offerId}/status`, {
+                method: "PUT",
+                body: JSON.stringify({
+                    offer_status: select.value
+                })
+            });
+
+            alert("Offer status updated successfully");
+
+            await refreshAll();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function createPlacement(offerId) {
+        if (!confirm("Create placement record for this accepted offer?")) {
+            return;
+        }
+
+        try {
+            await apiRequest("/api/placements", {
+                method: "POST",
+                body: JSON.stringify({
+                    offer_id: offerId
+                })
+            });
+
+            alert("Placement created successfully");
+
+            await refreshAll();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function updateJoining(placementId) {
+        const joiningStatus = document.getElementById(
+            "joining-" + placementId
+        ).value;
+
+        const actualJoiningDate = document.getElementById(
+            "actual-date-" + placementId
+        ).value;
+
+        try {
+            await apiRequest(`/api/placements/${placementId}/joining`, {
+                method: "PUT",
+                body: JSON.stringify({
+                    joining_status: joiningStatus,
+                    actual_joining_date: actualJoiningDate || null
+                })
+            });
+
+            alert("Joining details updated successfully");
+
+            await refreshAll();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function updatePlacementStatus(placementId) {
+        const status = document.getElementById(
+            "placement-status-" + placementId
+        ).value;
+
+        try {
+            await apiRequest(`/api/placements/${placementId}/status`, {
+                method: "PUT",
+                body: JSON.stringify({
+                    placement_status: status
+                })
+            });
+
+            alert("Placement status updated successfully");
+
+            await refreshAll();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    document.getElementById("offerForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        clearMessage("offerMessage");
+
+        const saveButton = document.getElementById("saveOfferButton");
+        saveButton.disabled = true;
+
+        const payload = {
+            application_id: document.getElementById("applicationId").value,
+            offer_code: document.getElementById("offerCode").value.trim(),
+            designation: document.getElementById("designation").value.trim(),
+            offered_package_lpa: document.getElementById("package").value,
+            offer_date: document.getElementById("offerDate").value,
+            expected_joining_date:
+                document.getElementById("expectedJoiningDate").value || null,
+            remarks: document.getElementById("remarks").value.trim()
+        };
+
+        try {
+            await apiRequest("/api/offers", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+
+            showMessage(
+                "offerMessage",
+                "Offer created successfully.",
+                "success"
+            );
+
+            event.target.reset();
+
+            await loadSelectedApplications();
+            await refreshAll();
+
+        } catch (error) {
+            showMessage("offerMessage", error.message, "error");
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+
+    document.getElementById("offerForm").addEventListener("reset", () => {
+        setTimeout(() => clearMessage("offerMessage"), 0);
+    });
+
+    document.getElementById("offerSearch").addEventListener("input", loadOffers);
+    document.getElementById("offerStatusFilter").addEventListener("change", loadOffers);
+
+    document.getElementById("placementSearch").addEventListener("input", loadPlacements);
+    document.getElementById("joiningStatusFilter").addEventListener("change", loadPlacements);
+
+    document.getElementById("refreshButton").addEventListener("click", refreshAll);
+
+    async function refreshAll() {
+        try {
+            await Promise.all([
+                loadOffers(),
+                loadPlacements(),
+                loadStatistics()
+            ]);
+        } catch (error) {
+            console.error("Unable to refresh placement page:", error);
+        }
+    }
+
+    async function initializePage() {
+        document.getElementById("offerDate").value =
+            new Date().toISOString().slice(0, 10);
+
+        await loadSelectedApplications();
+        await refreshAll();
+    }
+
+    initializePage();
+</script>
+
+</body>
+</html>

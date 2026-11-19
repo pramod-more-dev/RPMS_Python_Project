@@ -1,0 +1,973 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Interviews</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .interview-form {
+            display: none !important;
+        }
+
+        .interview-form.show {
+            display: block !important;
+        }
+
+        .feedback-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .feedback-modal.show {
+            display: flex;
+        }
+
+        .feedback-box {
+            background: #fff;
+            width: 100%;
+            max-width: 650px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 14px;
+            padding: 25px;
+        }
+
+        .feedback-box h2 {
+            margin-bottom: 18px;
+        }
+
+        .feedback-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .small-button {
+            border: 0;
+            border-radius: 6px;
+            padding: 7px 10px;
+            cursor: pointer;
+            margin: 2px;
+            font-size: 12px;
+        }
+
+        .feedback-button {
+            background: #e8f0eb;
+            color: #17643b;
+        }
+
+        .status-select {
+            padding: 7px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            max-width: 145px;
+        }
+
+        .message {
+            display: none;
+            padding: 12px;
+            border-radius: 7px;
+            margin: 12px 0;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: #ffe8e8;
+            color: #a32323;
+        }
+
+        .message.success {
+            background: #e5f6e9;
+            color: #17643b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        .form-grid .form-group textarea {
+            width: 100%;
+        }
+
+        .record-count {
+            font-size: 13px;
+        }
+
+        @media(max-width: 700px) {
+            .feedback-box {
+                padding: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div>
+                <h2>RPMS</h2>
+                <p>Placement System</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html">Candidates</a>
+            <a href="companies.html">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html" class="active">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+
+        <a href="login.html" class="logout-link">Logout</a>
+
+    </aside>
+
+    <main class="dashboard-main">
+
+        <header class="topbar">
+            <div>
+                <h1>Interview Management</h1>
+                <p>Schedule and track candidate interview rounds</p>
+            </div>
+
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div>
+                    <strong>Admin User</strong>
+                    <p>Administrator</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-toolbar">
+            <div>
+                <h2>Interview Schedule</h2>
+                <p>Manage interview rounds and candidate feedback</p>
+            </div>
+
+            <button
+                type="button"
+                class="action-button"
+                id="openScheduleButton">
+                + Schedule Interview
+            </button>
+        </section>
+
+        <div id="pageMessage" class="message"></div>
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <p>Total Interviews</p>
+                <h2 id="totalCount">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <p>Scheduled</p>
+                <h2 id="scheduledCount">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✓</div>
+                <p>Completed</p>
+                <h2 id="completedCount">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">↗</div>
+                <p>Recommended</p>
+                <h2 id="recommendedCount">0</h2>
+            </div>
+
+        </section>
+
+        <section class="content-card">
+
+            <div class="section-heading">
+                <h2>Interview Records</h2>
+                <span class="record-count" id="recordCount">0 Records</span>
+            </div>
+
+            <div class="filter-panel">
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search candidate, company or job...">
+
+                <select id="roundFilter">
+                    <option value="">All Interview Rounds</option>
+                    <option value="Aptitude">Aptitude</option>
+                    <option value="Technical">Technical</option>
+                    <option value="HR">HR</option>
+                    <option value="Managerial">Managerial</option>
+                </select>
+
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="SCHEDULED">Scheduled</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="RESCHEDULED">Rescheduled</option>
+                    <option value="CANCELLED">Cancelled</option>
+                    <option value="NO_SHOW">No Show</option>
+                </select>
+
+                <button
+                    type="button"
+                    class="action-button"
+                    id="searchButton">
+                    Search
+                </button>
+
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Interview ID</th>
+                            <th>Candidate</th>
+                            <th>Company</th>
+                            <th>Job Role</th>
+                            <th>Round</th>
+                            <th>Date & Time</th>
+                            <th>Mode</th>
+                            <th>Status</th>
+                            <th>Feedback</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="interviewTableBody">
+                        <tr>
+                            <td colspan="10" class="empty-state">
+                                Loading interviews...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+
+        <section class="content-card interview-form" id="scheduleSection">
+
+            <div class="section-heading">
+                <h2>Schedule New Interview</h2>
+            </div>
+
+            <form id="scheduleForm">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="applicationId">Application ID *</label>
+                        <input
+                            type="number"
+                            id="applicationId"
+                            min="1"
+                            placeholder="Enter existing application ID"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roundNumber">Round Number *</label>
+                        <input
+                            type="number"
+                            id="roundNumber"
+                            min="1"
+                            value="1"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roundType">Round Type *</label>
+                        <select id="roundType" required>
+                            <option value="">Select Round</option>
+                            <option value="Aptitude">Aptitude</option>
+                            <option value="Technical">Technical</option>
+                            <option value="HR">HR</option>
+                            <option value="Managerial">Managerial</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interviewMode">Interview Mode *</label>
+                        <select id="interviewMode" required>
+                            <option value="">Select Mode</option>
+                            <option value="ONLINE">Online</option>
+                            <option value="OFFLINE">Offline</option>
+                            <option value="TELEPHONIC">Telephonic</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interviewDate">Interview Date *</label>
+                        <input type="date" id="interviewDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interviewTime">Interview Time</label>
+                        <input type="time" id="interviewTime">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interviewStatus">Status *</label>
+                        <select id="interviewStatus" required>
+                            <option value="SCHEDULED">Scheduled</option>
+                            <option value="RESCHEDULED">Rescheduled</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="NO_SHOW">No Show</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interviewer">Interviewer Name</label>
+                        <input
+                            type="text"
+                            id="interviewer"
+                            maxlength="120"
+                            placeholder="Enter interviewer name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="meetingLocation">Meeting Link / Location</label>
+                        <input
+                            type="text"
+                            id="meetingLocation"
+                            maxlength="255"
+                            placeholder="Meeting URL or office address">
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+
+                    <button
+                        type="submit"
+                        class="action-button"
+                        id="scheduleButton">
+                        Schedule Interview
+                    </button>
+
+                    <button type="reset" class="reset-button">
+                        Reset Form
+                    </button>
+
+                    <button
+                        type="button"
+                        class="reset-button"
+                        id="closeScheduleButton">
+                        Close
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+</div>
+
+<div class="feedback-modal" id="feedbackModal">
+
+    <div class="feedback-box">
+
+        <h2 id="feedbackTitle">Interview Feedback</h2>
+
+        <p
+            id="feedbackCandidate"
+            style="margin-bottom:18px;color:#666;">
+        </p>
+
+        <form id="feedbackForm">
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label for="technicalRating">Technical Rating (0–5) *</label>
+                    <input
+                        type="number"
+                        id="technicalRating"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="communicationRating">Communication Rating (0–5) *</label>
+                    <input
+                        type="number"
+                        id="communicationRating"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="problemRating">Problem Solving Rating (0–5) *</label>
+                    <input
+                        type="number"
+                        id="problemRating"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="overallRating">Overall Rating (0–5) *</label>
+                    <input
+                        type="number"
+                        id="overallRating"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="recommendation">Recommendation *</label>
+                    <select id="recommendation" required>
+                        <option value="">Select Recommendation</option>
+                        <option value="NEXT_ROUND">Next Round</option>
+                        <option value="SELECTED">Selected</option>
+                        <option value="REJECTED">Rejected</option>
+                        <option value="ON_HOLD">On Hold</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="submittedBy">Submitted By (User ID) *</label>
+                    <input
+                        type="number"
+                        id="submittedBy"
+                        min="1"
+                        value="1"
+                        required>
+                </div>
+
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label for="feedbackRemarks">Remarks</label>
+                    <textarea
+                        id="feedbackRemarks"
+                        rows="4"
+                        placeholder="Enter interview feedback..."></textarea>
+                </div>
+
+            </div>
+
+            <div class="feedback-actions">
+
+                <button
+                    type="submit"
+                    class="action-button"
+                    id="feedbackSaveButton">
+                    Save Feedback
+                </button>
+
+                <button
+                    type="button"
+                    class="reset-button"
+                    id="closeFeedbackButton">
+                    Close
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+    let interviewRecords = [];
+    let activeInterviewId = null;
+
+    const scheduleSection = document.getElementById("scheduleSection");
+
+    function openSchedule() {
+        scheduleSection.classList.add("show");
+
+        scheduleSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    function closeSchedule() {
+        scheduleSection.classList.remove("show");
+    }
+
+    document.getElementById("openScheduleButton").addEventListener("click", openSchedule);
+    document.getElementById("closeScheduleButton").addEventListener("click", closeSchedule);
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[character]);
+    }
+
+    function showMessage(message, type = "success") {
+        const box = document.getElementById("pageMessage");
+
+        box.textContent = message;
+        box.className = "message show " + type;
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+        setTimeout(() => {
+            box.className = "message";
+        }, 5000);
+    }
+
+    function formatDate(value) {
+        if (!value) return "-";
+
+        const parts = String(value).substring(0, 10).split("-");
+
+        if (parts.length !== 3) return value;
+
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    function formatTime(value) {
+        if (!value) return "-";
+        return String(value).substring(0, 5);
+    }
+
+    function statusBadge(status) {
+        const normalized = String(status || "").toUpperCase();
+
+        let className = "warning";
+
+        if (normalized === "COMPLETED") {
+            className = "success";
+        }
+
+        if (normalized === "CANCELLED" || normalized === "NO_SHOW") {
+            className = "danger";
+        }
+
+        return `<span class="status-badge ${className}">${escapeHTML(normalized.replaceAll("_", " "))}</span>`;
+    }
+
+    function renderStats(records) {
+        document.getElementById("totalCount").textContent = records.length;
+
+        document.getElementById("scheduledCount").textContent =
+            records.filter(item => item.status === "SCHEDULED").length;
+
+        document.getElementById("completedCount").textContent =
+            records.filter(item => item.status === "COMPLETED").length;
+
+        document.getElementById("recommendedCount").textContent =
+            records.filter(item =>
+                ["SELECTED", "NEXT_ROUND"].includes(
+                    String(item.recommendation || "").toUpperCase()
+                )
+            ).length;
+    }
+
+    function renderInterviews(records) {
+        const body = document.getElementById("interviewTableBody");
+
+        document.getElementById("recordCount").textContent =
+            `${records.length} Records`;
+
+        if (!records.length) {
+            body.innerHTML = `
+                <tr>
+                    <td colspan="10" class="empty-state">
+                        No interview records found.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        body.innerHTML = records.map(item => {
+
+            const feedbackText = item.recommendation
+                ? escapeHTML(String(item.recommendation).replaceAll("_", " "))
+                : "Pending";
+
+            return `
+                <tr>
+                    <td>INT-${String(item.interview_id).padStart(3, "0")}</td>
+
+                    <td>
+                        <strong>${escapeHTML(item.candidate_name)}</strong><br>
+                        <small>${escapeHTML(item.application_code || "")}</small>
+                    </td>
+
+                    <td>${escapeHTML(item.company_name)}</td>
+
+                    <td>${escapeHTML(item.job_title)}</td>
+
+                    <td>
+                        ${escapeHTML(item.round_type)}
+                        ${escapeHTML(item.round_number)}
+                    </td>
+
+                    <td>
+                        ${formatDate(item.scheduled_date)}<br>
+                        <small>${formatTime(item.scheduled_time)}</small>
+                    </td>
+
+                    <td>${escapeHTML(item.mode)}</td>
+
+                    <td>${statusBadge(item.status)}</td>
+
+                    <td>${feedbackText}</td>
+
+                    <td>
+                        <button
+                            class="small-button feedback-button"
+                            onclick="openFeedback(${item.interview_id})">
+                            Feedback
+                        </button>
+
+                        <select
+                            class="status-select"
+                            onchange="changeInterviewStatus(${item.interview_id}, this.value)">
+
+                            <option value="">Update Status</option>
+                            <option value="SCHEDULED">Scheduled</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="RESCHEDULED">Rescheduled</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="NO_SHOW">No Show</option>
+
+                        </select>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    async function loadInterviews() {
+
+        const search = document.getElementById("searchInput").value.trim();
+        const status = document.getElementById("statusFilter").value;
+        const roundType = document.getElementById("roundFilter").value;
+
+        const params = new URLSearchParams({
+            search,
+            status,
+            round_type: roundType
+        });
+
+        try {
+            const response = await fetch(`/api/interviews?${params.toString()}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to load interviews");
+            }
+
+            interviewRecords = data;
+
+            renderStats(data);
+            renderInterviews(data);
+
+        } catch (error) {
+
+            document.getElementById("interviewTableBody").innerHTML = `
+                <tr>
+                    <td colspan="10" class="empty-state">
+                        ${escapeHTML(error.message)}
+                    </td>
+                </tr>`;
+
+            showMessage(error.message, "error");
+        }
+    }
+
+    document.getElementById("scheduleForm").addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const button = document.getElementById("scheduleButton");
+
+        button.disabled = true;
+        button.textContent = "Saving...";
+
+        const payload = {
+            application_id: document.getElementById("applicationId").value,
+            round_number: document.getElementById("roundNumber").value,
+            round_type: document.getElementById("roundType").value,
+            scheduled_date: document.getElementById("interviewDate").value,
+            scheduled_time: document.getElementById("interviewTime").value,
+            mode: document.getElementById("interviewMode").value,
+            interviewer_name: document.getElementById("interviewer").value,
+            meeting_or_location: document.getElementById("meetingLocation").value,
+            status: document.getElementById("interviewStatus").value
+        };
+
+        try {
+
+            const response = await fetch("/api/interviews", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to schedule interview");
+            }
+
+            showMessage(
+                `Interview scheduled successfully. Interview ID: ${result.interview_id}`
+            );
+
+            this.reset();
+
+            document.getElementById("roundNumber").value = 1;
+            document.getElementById("interviewStatus").value = "SCHEDULED";
+
+            closeSchedule();
+
+            await loadInterviews();
+
+        } catch (error) {
+
+            showMessage(error.message, "error");
+
+        } finally {
+
+            button.disabled = false;
+            button.textContent = "Schedule Interview";
+        }
+    });
+
+    async function changeInterviewStatus(interviewId, status) {
+
+        if (!status) return;
+
+        if (!confirm(`Change interview status to ${status.replaceAll("_", " ")}?`)) {
+            await loadInterviews();
+            return;
+        }
+
+        try {
+
+            const response = await fetch(`/api/interviews/${interviewId}/status`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to update status");
+            }
+
+            showMessage(result.message);
+
+            await loadInterviews();
+
+        } catch (error) {
+
+            showMessage(error.message, "error");
+            await loadInterviews();
+        }
+    }
+
+    async function openFeedback(interviewId) {
+
+        activeInterviewId = interviewId;
+
+        const record = interviewRecords.find(
+            item => Number(item.interview_id) === Number(interviewId)
+        );
+
+        document.getElementById("feedbackTitle").textContent =
+            `Feedback - INT-${String(interviewId).padStart(3, "0")}`;
+
+        document.getElementById("feedbackCandidate").textContent =
+            record
+                ? `${record.candidate_name} | ${record.job_title} | ${record.company_name}`
+                : "";
+
+        const form = document.getElementById("feedbackForm");
+
+        form.reset();
+
+        document.getElementById("submittedBy").value = 1;
+
+        try {
+
+            const response = await fetch(`/api/interviews/${interviewId}/feedback`);
+            const feedback = await response.json();
+
+            if (!response.ok) {
+                throw new Error(feedback.error || "Unable to load feedback");
+            }
+
+            if (feedback && feedback.feedback_id) {
+
+                document.getElementById("technicalRating").value =
+                    feedback.technical_rating;
+
+                document.getElementById("communicationRating").value =
+                    feedback.communication_rating;
+
+                document.getElementById("problemRating").value =
+                    feedback.problem_solving_rating;
+
+                document.getElementById("overallRating").value =
+                    feedback.overall_rating;
+
+                document.getElementById("recommendation").value =
+                    feedback.recommendation;
+
+                document.getElementById("feedbackRemarks").value =
+                    feedback.remarks || "";
+
+                document.getElementById("submittedBy").value =
+                    feedback.submitted_by || 1;
+            }
+
+            document.getElementById("feedbackModal").classList.add("show");
+
+        } catch (error) {
+
+            showMessage(error.message, "error");
+        }
+    }
+
+    function closeFeedback() {
+        document.getElementById("feedbackModal").classList.remove("show");
+        activeInterviewId = null;
+    }
+
+    document.getElementById("closeFeedbackButton").addEventListener(
+        "click",
+        closeFeedback
+    );
+
+    document.getElementById("feedbackForm").addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        if (!activeInterviewId) return;
+
+        const button = document.getElementById("feedbackSaveButton");
+
+        button.disabled = true;
+        button.textContent = "Saving...";
+
+        const payload = {
+            technical_rating: document.getElementById("technicalRating").value,
+            communication_rating: document.getElementById("communicationRating").value,
+            problem_solving_rating: document.getElementById("problemRating").value,
+            overall_rating: document.getElementById("overallRating").value,
+            recommendation: document.getElementById("recommendation").value,
+            remarks: document.getElementById("feedbackRemarks").value,
+            submitted_by: document.getElementById("submittedBy").value
+        };
+
+        try {
+
+            const response = await fetch(
+                `/api/interviews/${activeInterviewId}/feedback`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to save feedback");
+            }
+
+            closeFeedback();
+
+            showMessage(result.message);
+
+            await loadInterviews();
+
+        } catch (error) {
+
+            showMessage(error.message, "error");
+
+        } finally {
+
+            button.disabled = false;
+            button.textContent = "Save Feedback";
+        }
+    });
+
+    document.getElementById("searchButton").addEventListener(
+        "click",
+        loadInterviews
+    );
+
+    document.getElementById("searchInput").addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            loadInterviews();
+        }
+    });
+
+    document.getElementById("feedbackModal").addEventListener("click", function(event) {
+        if (event.target === this) {
+            closeFeedback();
+        }
+    });
+
+    loadInterviews();
+
+</script>
+
+</body>
+</html>

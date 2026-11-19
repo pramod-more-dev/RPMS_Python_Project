@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Add Company</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div><h2>RPMS</h2><p>Placement System</p></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html">Candidates</a>
+            <a href="companies.html" class="active">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+        <a href="login.html" class="logout-link">Logout</a>
+    </aside>
+
+    <main class="dashboard-main">
+
+        <header class="topbar">
+            <div>
+                <h1 id="pageTitle">Add Company</h1>
+                <p>Enter company and HR contact information</p>
+            </div>
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div><strong>Admin User</strong><p>Administrator</p></div>
+            </div>
+        </header>
+
+        <div class="breadcrumb">
+            <a href="dashboard.html">Dashboard</a> /
+            <a href="companies.html">Companies</a> /
+            <span id="breadcrumbTitle">Add Company</span>
+        </div>
+
+        <section class="content-card">
+            <h2>Company Information</h2>
+
+            <form id="companyForm">
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="company_code">Company Code *</label>
+                        <input type="text" id="company_code"
+                               maxlength="30" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company_name">Company Name *</label>
+                        <input type="text" id="company_name"
+                               maxlength="180" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="industry">Industry</label>
+                        <input type="text" id="industry" maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="website">Website</label>
+                        <input type="text" id="website" maxlength="200"
+                               placeholder="https://example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" maxlength="120">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company_type">Company Type</label>
+                        <select id="company_type">
+                            <option value="">Select Company Type</option>
+                            <option value="IT">IT</option>
+                            <option value="NON-IT">Non-IT</option>
+                            <option value="STARTUP">Startup</option>
+                            <option value="MNC">MNC</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hr_name">HR Name</label>
+                        <input type="text" id="hr_name" maxlength="120">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hr_email">HR Email</label>
+                        <input type="email" id="hr_email" maxlength="150">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hr_mobile">HR Mobile</label>
+                        <input type="tel" id="hr_mobile" maxlength="20">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status *</label>
+                        <select id="status" required>
+                            <option value="ACTIVE">Active</option>
+                            <option value="INACTIVE">Inactive</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <p id="formMessage" role="status"></p>
+
+                <div class="form-actions">
+                    <button type="submit" class="action-button" id="submitButton">
+                        Save Company
+                    </button>
+                    <button type="reset" class="cancel-button" id="resetButton">
+                        Reset
+                    </button>
+                    <a href="companies.html" class="cancel-button">Cancel</a>
+                </div>
+            </form>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const companyId = params.get("id");
+    const isEdit = Boolean(companyId && /^\d+$/.test(companyId));
+
+    const form = document.getElementById("companyForm");
+    const formMessage = document.getElementById("formMessage");
+    const submitButton = document.getElementById("submitButton");
+    const resetButton = document.getElementById("resetButton");
+
+    const fieldIds = [
+        "company_code",
+        "company_name",
+        "industry",
+        "website",
+        "location",
+        "company_type",
+        "hr_name",
+        "hr_email",
+        "hr_mobile",
+        "status"
+    ];
+
+    function showMessage(text, isError = false) {
+        formMessage.textContent = text;
+        formMessage.style.color = isError ? "#c0392b" : "#287a55";
+    }
+
+    function getFormData() {
+        const data = {};
+
+        fieldIds.forEach(id => {
+            data[id] = document.getElementById(id).value.trim();
+        });
+
+        return data;
+    }
+
+    function fillForm(company) {
+        fieldIds.forEach(id => {
+            document.getElementById(id).value = company[id] ?? "";
+        });
+    }
+
+    async function loadCompany() {
+        if (!isEdit) {
+            if (companyId) {
+                showMessage("Invalid company ID.", true);
+                submitButton.disabled = true;
+            }
+            return;
+        }
+
+        document.getElementById("pageTitle").textContent = "Edit Company";
+        document.getElementById("breadcrumbTitle").textContent = "Edit Company";
+        submitButton.textContent = "Update Company";
+        resetButton.textContent = "Reload Company";
+
+        try {
+            const response = await fetch(`/api/companies/${encodeURIComponent(companyId)}`);
+            const company = await response.json();
+
+            if (!response.ok) {
+                throw new Error(company.error || "Company not found.");
+            }
+
+            fillForm(company);
+
+        } catch (error) {
+            showMessage(error.message, true);
+            submitButton.disabled = true;
+        }
+    }
+
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const data = getFormData();
+        const url = isEdit
+            ? `/api/companies/${encodeURIComponent(companyId)}`
+            : "/api/companies";
+
+        const method = isEdit ? "PUT" : "POST";
+
+        submitButton.disabled = true;
+        showMessage(isEdit ? "Updating company..." : "Saving company...");
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to save company.");
+            }
+
+            showMessage(result.message || "Company saved successfully.");
+
+            setTimeout(() => {
+                window.location.href = "companies.html";
+            }, 900);
+
+        } catch (error) {
+            showMessage(error.message, true);
+            submitButton.disabled = false;
+        }
+    });
+
+    resetButton.addEventListener("click", () => {
+        if (isEdit) {
+            loadCompany();
+        } else {
+            setTimeout(() => formMessage.textContent = "", 0);
+        }
+    });
+
+    loadCompany();
+</script>
+
+</body>
+</html>

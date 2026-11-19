@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Candidates</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div><h2>RPMS</h2><p>Placement System</p></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html" class="active">Candidates</a>
+            <a href="companies.html">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+        <a href="login.html" class="logout-link">Logout</a>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div>
+                <h1>Candidates</h1>
+                <p>Manage registered candidate profiles</p>
+            </div>
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div><strong>Admin User</strong><p>Administrator</p></div>
+            </div>
+        </header>
+
+        <section class="page-toolbar">
+            <div>
+                <h2>Candidate Directory</h2>
+                <p>View and manage all registered candidates.</p>
+            </div>
+            <a href="candidate-form.html" class="action-button">+ Add Candidate</a>
+        </section>
+
+        <section class="filter-panel">
+            <input type="search" id="searchInput"
+                   placeholder="Search by name, code or email">
+
+            <select id="technologyFilter">
+                <option value="">All Technologies</option>
+                <option>Python</option>
+                <option>Java</option>
+                <option>SQL</option>
+                <option>Data Analytics</option>
+                <option>Web Development</option>
+                <option>Testing</option>
+            </select>
+
+            <select id="statusFilter">
+                <option value="">All Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="PLACED">Placed</option>
+            </select>
+
+            <button type="button" class="filter-button" id="searchButton">
+                Search
+            </button>
+        </section>
+
+        <section class="content-card">
+            <div class="section-heading">
+                <h2>Registered Candidates</h2>
+                <span class="record-count" id="recordCount">Loading...</span>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Candidate Code</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Technology</th>
+                            <th>Percentage</th>
+                            <th>Profile Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="candidateTableBody">
+                        <tr>
+                            <td colspan="7">Loading candidates...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    const API_URL = "/api/candidates";
+
+    const tableBody = document.getElementById("candidateTableBody");
+    const recordCount = document.getElementById("recordCount");
+    const searchInput = document.getElementById("searchInput");
+    const technologyFilter = document.getElementById("technologyFilter");
+    const statusFilter = document.getElementById("statusFilter");
+    const searchButton = document.getElementById("searchButton");
+
+    let allCandidates = [];
+
+    async function loadCandidates() {
+        try {
+            recordCount.textContent = "Loading...";
+
+            const response = await fetch(API_URL);
+
+            if (!response.ok) {
+                throw new Error("Unable to load candidates");
+            }
+
+            allCandidates = await response.json();
+
+            populateTechnologies();
+            displayCandidates(allCandidates);
+
+        } catch (error) {
+            console.error(error);
+            recordCount.textContent = "Error";
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7">Unable to load candidates. Please check the server and database connection.</td>
+                </tr>
+            `;
+        }
+    }
+
+    function populateTechnologies() {
+        const technologies = [
+            ...new Set(
+                allCandidates
+                    .map(candidate => candidate.primary_technology)
+                    .filter(Boolean)
+            )
+        ];
+
+        technologies.forEach(technology => {
+            const exists = [...technologyFilter.options]
+                .some(option => option.value === technology);
+
+            if (!exists) {
+                const option = document.createElement("option");
+                option.value = technology;
+                option.textContent = technology;
+                technologyFilter.appendChild(option);
+            }
+        });
+    }
+
+    function displayCandidates(candidates) {
+        tableBody.innerHTML = "";
+
+        recordCount.textContent = `${candidates.length} Records`;
+
+        if (candidates.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7">No candidates found.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        candidates.forEach(candidate => {
+            const row = document.createElement("tr");
+
+            const values = [
+                candidate.candidate_code,
+                candidate.full_name,
+                candidate.email,
+                candidate.primary_technology || "N/A",
+                `${Number(candidate.percentage).toFixed(1)}%`
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value ?? "";
+                row.appendChild(cell);
+            });
+
+            const statusCell = document.createElement("td");
+            const statusBadge = document.createElement("span");
+
+            const profileStatus = candidate.profile_status || "UNKNOWN";
+
+            statusBadge.classList.add("status-badge");
+            statusBadge.classList.add(
+                profileStatus === "ACTIVE" ? "success" : "warning"
+            );
+
+            statusBadge.textContent =
+                profileStatus.charAt(0) +
+                profileStatus.slice(1).toLowerCase();
+
+            statusCell.appendChild(statusBadge);
+            row.appendChild(statusCell);
+
+            const actionCell = document.createElement("td");
+            const viewLink = document.createElement("a");
+
+            viewLink.href =
+                `candidate-details.html?id=${encodeURIComponent(candidate.candidate_id)}`;
+
+            viewLink.className = "table-link";
+            viewLink.textContent = "View";
+
+            actionCell.appendChild(viewLink);
+            row.appendChild(actionCell);
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    function filterCandidates() {
+        const searchValue = searchInput.value.trim().toLowerCase();
+        const selectedTechnology = technologyFilter.value;
+        const selectedStatus = statusFilter.value;
+
+        const filteredCandidates = allCandidates.filter(candidate => {
+            const matchesSearch =
+                (candidate.full_name || "").toLowerCase().includes(searchValue) ||
+                (candidate.candidate_code || "").toLowerCase().includes(searchValue) ||
+                (candidate.email || "").toLowerCase().includes(searchValue);
+
+            const matchesTechnology =
+                !selectedTechnology ||
+                candidate.primary_technology === selectedTechnology;
+
+            let matchesStatus = true;
+
+            if (selectedStatus === "PLACED") {
+                matchesStatus = candidate.placement_status === "PLACED";
+            } else if (selectedStatus) {
+                matchesStatus = candidate.profile_status === selectedStatus;
+            }
+
+            return matchesSearch && matchesTechnology && matchesStatus;
+        });
+
+        displayCandidates(filteredCandidates);
+    }
+
+    searchButton.addEventListener("click", filterCandidates);
+
+    searchInput.addEventListener("input", filterCandidates);
+    technologyFilter.addEventListener("change", filterCandidates);
+    statusFilter.addEventListener("change", filterCandidates);
+
+    searchInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            filterCandidates();
+        }
+    });
+
+    loadCandidates();
+</script>
+
+</body>
+</html>

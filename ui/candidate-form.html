@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Candidate Form</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div><h2>RPMS</h2><p>Placement System</p></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html" class="active">Candidates</a>
+            <a href="companies.html">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+        <a href="login.html" class="logout-link">Logout</a>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div>
+                <h1 id="pageTitle">Add Candidate</h1>
+                <p id="pageSubtitle">Register a new candidate in the system</p>
+            </div>
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div><strong>Admin User</strong><p>Administrator</p></div>
+            </div>
+        </header>
+
+        <div class="breadcrumb">
+            <a href="dashboard.html">Dashboard</a> /
+            <a href="candidates.html">Candidates</a> /
+            <span id="breadcrumbTitle">Add Candidate</span>
+        </div>
+
+        <section class="content-card candidate-form-card">
+            <div class="form-heading">
+                <h2 id="formTitle">Candidate Information</h2>
+                <p id="formSubtitle">Enter the candidate's personal and academic details.</p>
+            </div>
+
+            <form id="candidateForm">
+
+                <h3 class="form-section-title">Personal Details</h3>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="candidate_code">Candidate Code *</label>
+                        <input type="text" id="candidate_code" name="candidate_code"
+                               placeholder="CAN-2026-0022" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="full_name">Full Name *</label>
+                        <input type="text" id="full_name" name="full_name"
+                               placeholder="Enter full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email"
+                               placeholder="candidate@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobile">Mobile Number *</label>
+                        <input type="tel" id="mobile" name="mobile"
+                               pattern="[0-9]{10}" maxlength="10"
+                               placeholder="10 digit mobile number" required>
+                    </div>
+                </div>
+
+                <h3 class="form-section-title">Academic Details</h3>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="qualification">Qualification *</label>
+                        <select id="qualification" name="qualification" required>
+                            <option value="">Select Qualification</option>
+                            <option value="BCS">BCS</option>
+                            <option value="BCA">BCA</option>
+                            <option value="B.Sc Computer Science">B.Sc Computer Science</option>
+                            <option value="B.E Computer">B.E Computer</option>
+                            <option value="B.Tech">B.Tech</option>
+                            <option value="MCA">MCA</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="passing_year">Passing Year *</label>
+                        <input type="number" id="passing_year" name="passing_year"
+                               min="2000" max="2100" placeholder="2027" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="percentage">Percentage *</label>
+                        <input type="number" id="percentage" name="percentage"
+                               min="0" max="100" step="0.01"
+                               placeholder="Enter percentage" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="backlog_count">Backlog Count *</label>
+                        <input type="number" id="backlog_count" name="backlog_count"
+                               min="0" value="0" required>
+                    </div>
+                </div>
+
+                <h3 class="form-section-title">Technical Details</h3>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="technology">Primary Technology *</label>
+                        <select id="technology" name="primary_technology" required>
+                            <option value="">Select Technology</option>
+                            <option value="Python">Python</option>
+                            <option value="Java">Java</option>
+                            <option value="SQL">SQL</option>
+                            <option value="Data Analytics">Data Analytics</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value=".NET">.NET</option>
+                            <option value="Testing">Testing</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="formMessage" role="alert"
+                     style="margin-top:15px; font-weight:600;"></div>
+
+                <div class="form-actions">
+                    <a href="candidates.html" class="cancel-button">Cancel</a>
+                    <button type="reset" class="reset-button" id="resetButton">Reset</button>
+                    <button type="submit" class="action-button" id="saveButton">
+                        Save Candidate
+                    </button>
+                </div>
+
+            </form>
+        </section>
+    </main>
+</div>
+
+<script>
+    const form = document.getElementById("candidateForm");
+    const message = document.getElementById("formMessage");
+    const saveButton = document.getElementById("saveButton");
+    const resetButton = document.getElementById("resetButton");
+
+    const params = new URLSearchParams(window.location.search);
+    const candidateId = params.get("id");
+    const editMode = Boolean(candidateId);
+
+    const fields = {
+        candidate_code: document.getElementById("candidate_code"),
+        full_name: document.getElementById("full_name"),
+        email: document.getElementById("email"),
+        mobile: document.getElementById("mobile"),
+        qualification: document.getElementById("qualification"),
+        passing_year: document.getElementById("passing_year"),
+        percentage: document.getElementById("percentage"),
+        backlog_count: document.getElementById("backlog_count"),
+        primary_technology: document.getElementById("technology")
+    };
+
+    function showMessage(text, color) {
+        message.style.color = color;
+        message.textContent = text;
+    }
+
+    async function loadCandidate() {
+        if (!editMode) return;
+
+        if (!/^\d+$/.test(candidateId)) {
+            showMessage("Invalid candidate ID.", "red");
+            saveButton.disabled = true;
+            return;
+        }
+
+        document.getElementById("pageTitle").textContent = "Edit Candidate";
+        document.getElementById("pageSubtitle").textContent =
+            "Update candidate information";
+        document.getElementById("breadcrumbTitle").textContent = "Edit Candidate";
+        document.getElementById("formTitle").textContent = "Update Candidate Information";
+        document.getElementById("formSubtitle").textContent =
+            "Modify the candidate's personal and academic details.";
+
+        saveButton.textContent = "Update Candidate";
+        document.title = "RPMS | Edit Candidate";
+
+        try {
+            saveButton.disabled = true;
+            saveButton.textContent = "Loading...";
+
+            const response = await fetch(`/api/candidates/${encodeURIComponent(candidateId)}`);
+            const candidate = await response.json();
+
+            if (!response.ok) {
+                throw new Error(candidate.error || "Candidate not found.");
+            }
+
+            fields.candidate_code.value = candidate.candidate_code || "";
+            fields.full_name.value = candidate.full_name || "";
+            fields.email.value = candidate.email || "";
+            fields.mobile.value = candidate.mobile || "";
+            fields.qualification.value = candidate.qualification || "";
+            fields.passing_year.value = candidate.passing_year ?? "";
+            fields.percentage.value = candidate.percentage ?? "";
+            fields.backlog_count.value = candidate.backlog_count ?? 0;
+            fields.primary_technology.value = candidate.primary_technology || "";
+
+            saveButton.textContent = "Update Candidate";
+            saveButton.disabled = false;
+
+        } catch (error) {
+            showMessage(error.message, "red");
+            saveButton.disabled = true;
+            saveButton.textContent = "Update Candidate";
+        }
+    }
+
+    form.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        showMessage("", "");
+
+        saveButton.disabled = true;
+        saveButton.textContent = editMode ? "Updating..." : "Saving...";
+
+        const candidate = {
+            candidate_code: fields.candidate_code.value.trim(),
+            full_name: fields.full_name.value.trim(),
+            email: fields.email.value.trim(),
+            mobile: fields.mobile.value.trim(),
+            qualification: fields.qualification.value,
+            passing_year: fields.passing_year.value,
+            percentage: fields.percentage.value,
+            backlog_count: fields.backlog_count.value,
+            primary_technology: fields.primary_technology.value
+        };
+
+        try {
+            const response = await fetch(
+                editMode
+                    ? `/api/candidates/${encodeURIComponent(candidateId)}`
+                    : "/api/candidates",
+                {
+                    method: editMode ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(candidate)
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to save candidate.");
+            }
+
+            showMessage(
+                editMode
+                    ? "Candidate updated successfully!"
+                    : `Candidate saved successfully! Candidate ID: ${result.candidate_id}`,
+                "green"
+            );
+
+            setTimeout(() => {
+                window.location.href = "candidates.html";
+            }, 1200);
+
+        } catch (error) {
+            showMessage(error.message, "red");
+            saveButton.disabled = false;
+            saveButton.textContent = editMode
+                ? "Update Candidate"
+                : "Save Candidate";
+        }
+    });
+
+    resetButton.addEventListener("click", function() {
+        if (editMode) {
+            setTimeout(loadCandidate, 0);
+        }
+    });
+
+    loadCandidate();
+</script>
+
+</body>
+</html>

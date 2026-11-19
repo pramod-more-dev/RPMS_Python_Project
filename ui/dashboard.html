@@ -1,0 +1,945 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .dashboard-refresh {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .refresh-button {
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            background: #17243A;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .refresh-button:hover {
+            background: #22334F;
+        }
+
+        .refresh-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .dashboard-error {
+            display: none;
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .dashboard-loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .dashboard-main {
+            min-width: 0;
+            overflow-x: hidden;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            min-width: 0;
+            margin-bottom: 22px;
+        }
+
+        .stat-card {
+            min-width: 0;
+            border-top: 3px solid #17243A;
+        }
+
+        .stat-card h2 {
+            color: #17243A;
+        }
+
+        .dashboard-content {
+            display: grid;
+            grid-template-columns: minmax(0, 1.8fr) minmax(240px, 0.8fr);
+            gap: 22px;
+            align-items: start;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dashboard-content > .content-card {
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dashboard-content .table-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .dashboard-content table {
+            width: 100%;
+            min-width: 650px;
+            border-collapse: collapse;
+        }
+
+        .dashboard-content th,
+        .dashboard-content td {
+            white-space: nowrap;
+            padding: 14px 12px;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+        }
+
+        .section-heading a {
+            color: #17243A;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quick-actions h2 {
+            margin: 0 0 8px;
+        }
+
+        .quick-actions a {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            background: #EEF2F7;
+            color: #17243A;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+
+        .quick-actions a:hover {
+            background: #DCE4EF;
+            transform: translateX(3px);
+        }
+
+        .dashboard-section {
+            margin-bottom: 22px;
+        }
+
+        .dashboard-section .content-card {
+            width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+        }
+
+        .funnel-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 18px;
+        }
+
+        .funnel-item {
+            display: grid;
+            grid-template-columns: 145px minmax(0, 1fr) 45px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .funnel-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .funnel-track {
+            width: 100%;
+            height: 12px;
+            background: #E9EDF3;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .funnel-fill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #17243A, #304D78);
+            border-radius: 20px;
+            transition: width 0.4s ease;
+        }
+
+        .funnel-value {
+            text-align: right;
+            font-weight: 700;
+            color: #17243A;
+            font-size: 13px;
+        }
+
+        .dashboard-empty {
+            text-align: center;
+            padding: 22px 12px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .dashboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .dashboard-list-item {
+            padding: 13px 0;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .dashboard-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .dashboard-list-item strong {
+            display: block;
+            color: #17243A;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .dashboard-list-item p {
+            margin: 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .dashboard-list-item .list-status {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #17243A;
+            background: #EEF2F7;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        .dashboard-two-column {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+            margin-bottom: 22px;
+        }
+
+        .dashboard-two-column > .content-card {
+            min-width: 0;
+        }
+
+        .dashboard-footer {
+            text-align: center;
+            padding: 20px 10px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .dashboard-content {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .dashboard-two-column {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .quick-actions {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .quick-actions h2 {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-refresh {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions h2 {
+                grid-column: auto;
+            }
+
+            .funnel-item {
+                grid-template-columns: 105px minmax(0, 1fr) 35px;
+                gap: 8px;
+            }
+
+            .funnel-label {
+                font-size: 11px;
+            }
+
+            .dashboard-content th,
+            .dashboard-content td {
+                padding: 11px 9px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div>
+                <h2>RPMS</h2>
+                <p>Placement System</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="candidates.html">Candidates</a>
+            <a href="companies.html">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+
+        <a href="login.html" class="logout-link">Logout</a>
+    </aside>
+
+    <main class="dashboard-main">
+
+        <header class="topbar">
+            <div>
+                <h1>Dashboard</h1>
+                <p>Welcome to Recruitment & Placement Management System</p>
+            </div>
+
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div>
+                    <strong>Admin User</strong>
+                    <p>Administrator</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="welcome-banner">
+            <div>
+                <h2>Welcome Back, Admin!</h2>
+                <p>Manage candidates, companies, jobs and placement activities.</p>
+                <p class="last-updated" id="lastUpdated">
+                    Last updated: Loading...
+                </p>
+            </div>
+
+            <div class="dashboard-refresh">
+                <a href="candidates.html" class="banner-button">
+                    View Candidates
+                </a>
+
+                <button
+                    type="button"
+                    class="refresh-button"
+                    id="refreshDashboard"
+                    onclick="loadDashboard()">
+                    Refresh
+                </button>
+            </div>
+        </section>
+
+        <div class="dashboard-error" id="dashboardError"></div>
+
+        <section class="stats-grid">
+
+            <article class="stat-card">
+                <p>Total Candidates</p>
+                <h2 id="totalCandidates">--</h2>
+                <span>Registered candidates</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Active Candidates</p>
+                <h2 id="activeCandidates">--</h2>
+                <span>Eligible active candidates</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Active Companies</p>
+                <h2 id="activeCompanies">--</h2>
+                <span>Partner companies</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Open Jobs</p>
+                <h2 id="openJobs">--</h2>
+                <span>Available opportunities</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Total Applications</p>
+                <h2 id="totalApplications">--</h2>
+                <span>Submitted applications</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Today's Interviews</p>
+                <h2 id="todayInterviews">--</h2>
+                <span>Scheduled for today</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Selected Candidates</p>
+                <h2 id="selectedCandidates">--</h2>
+                <span>Selected applications</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Active Placements</p>
+                <h2 id="activePlacements">--</h2>
+                <span>Recorded placements</span>
+            </article>
+
+        </section>
+
+        <section class="dashboard-section">
+            <div class="content-card">
+                <div class="section-heading">
+                    <h2>Recruitment Funnel</h2>
+                    <a href="reports.html">View Reports</a>
+                </div>
+
+                <div class="funnel-list">
+                    <div class="funnel-item">
+                        <span class="funnel-label">Candidates</span>
+                        <div class="funnel-track">
+                            <div class="funnel-fill" id="funnelCandidates"></div>
+                        </div>
+                        <span class="funnel-value" id="funnelCandidatesValue">0</span>
+                    </div>
+
+                    <div class="funnel-item">
+                        <span class="funnel-label">Applications</span>
+                        <div class="funnel-track">
+                            <div class="funnel-fill" id="funnelApplications"></div>
+                        </div>
+                        <span class="funnel-value" id="funnelApplicationsValue">0</span>
+                    </div>
+
+                    <div class="funnel-item">
+                        <span class="funnel-label">Interviews</span>
+                        <div class="funnel-track">
+                            <div class="funnel-fill" id="funnelInterviews"></div>
+                        </div>
+                        <span class="funnel-value" id="funnelInterviewsValue">0</span>
+                    </div>
+
+                    <div class="funnel-item">
+                        <span class="funnel-label">Selected</span>
+                        <div class="funnel-track">
+                            <div class="funnel-fill" id="funnelSelected"></div>
+                        </div>
+                        <span class="funnel-value" id="funnelSelectedValue">0</span>
+                    </div>
+
+                    <div class="funnel-item">
+                        <span class="funnel-label">Placed</span>
+                        <div class="funnel-track">
+                            <div class="funnel-fill" id="funnelPlaced"></div>
+                        </div>
+                        <span class="funnel-value" id="funnelPlacedValue">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-two-column">
+
+            <div class="content-card">
+                <div class="section-heading">
+                    <h2>Upcoming Interviews</h2>
+                    <a href="interviews.html">View All</a>
+                </div>
+
+                <div class="dashboard-list" id="upcomingInterviews">
+                    <div class="dashboard-empty">Loading interviews...</div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="section-heading">
+                    <h2>Recent Job Openings</h2>
+                    <a href="jobs.html">View All</a>
+                </div>
+
+                <div class="dashboard-list" id="recentJobs">
+                    <div class="dashboard-empty">Loading jobs...</div>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="dashboard-two-column">
+
+            <div class="content-card">
+                <div class="section-heading">
+                    <h2>Recent Placements</h2>
+                    <a href="placement-process.html">View All</a>
+                </div>
+
+                <div class="dashboard-list" id="recentPlacements">
+                    <div class="dashboard-empty">Loading placements...</div>
+                </div>
+            </div>
+
+            <div class="content-card quick-actions">
+                <h2>Quick Actions</h2>
+
+                <a href="candidate-form.html">+ Add New Candidate</a>
+                <a href="job-form.html">+ Add New Job</a>
+                <a href="applications.html">View Applications</a>
+                <a href="interviews.html">Manage Interviews</a>
+                <a href="placement-process.html">Manage Placements</a>
+                <a href="reports.html">Generate Reports</a>
+            </div>
+
+        </section>
+
+        <section class="dashboard-section">
+            <div class="content-card">
+                <div class="section-heading">
+                    <h2>Recent Applications</h2>
+                    <a href="applications.html">View All</a>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Application ID</th>
+                                <th>Candidate</th>
+                                <th>Job Role</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="recentApplications">
+                            <tr>
+                                <td colspan="4">Loading applications...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <footer class="dashboard-footer">
+            Recruitment & Placement Management System | RPMS
+        </footer>
+
+    </main>
+</div>
+
+<script>
+    async function fetchAPI(url) {
+        const response = await fetch(url, {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("API request failed: " + url);
+        }
+
+        return await response.json();
+    }
+
+    function getIndiaToday() {
+        return new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Asia/Kolkata",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+        }).format(new Date());
+    }
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[character]);
+    }
+
+    function formatStatus(status) {
+        return String(status || "N/A").replaceAll("_", " ");
+    }
+
+    function getApplicationStatusClass(status) {
+        const value = String(status || "").toUpperCase();
+
+        if (["SELECTED", "OFFERED", "PLACED"].includes(value)) {
+            return "success";
+        }
+
+        if (["REJECTED", "WITHDRAWN"].includes(value)) {
+            return "danger";
+        }
+
+        if (["SHORTLISTED", "INTERVIEW_SCHEDULED", "INTERVIEWED"].includes(value)) {
+            return "info";
+        }
+
+        return "warning";
+    }
+
+    function getValue(object, keys, fallback = "N/A") {
+        for (const key of keys) {
+            if (object && object[key] !== null && object[key] !== undefined && object[key] !== "") {
+                return object[key];
+            }
+        }
+
+        return fallback;
+    }
+
+    function renderRecentApplications(applications) {
+        const tbody = document.getElementById("recentApplications");
+
+        if (!Array.isArray(applications) || applications.length === 0) {
+            tbody.innerHTML = `
+                <tr><td colspan="4">No applications found.</td></tr>
+            `;
+            return;
+        }
+
+        const sorted = [...applications].sort((a, b) =>
+            Number(b.application_id || 0) - Number(a.application_id || 0)
+        );
+
+        tbody.innerHTML = sorted.slice(0, 5).map(application => {
+            const applicationId = getValue(
+                application,
+                ["application_code", "application_id"]
+            );
+
+            const candidate = getValue(
+                application,
+                ["candidate_name", "full_name"]
+            );
+
+            const job = getValue(application, ["job_title"]);
+
+            const status = getValue(
+                application,
+                ["application_status", "status"]
+            );
+
+            return `
+                <tr>
+                    <td>${escapeHTML(applicationId)}</td>
+                    <td>${escapeHTML(candidate)}</td>
+                    <td>${escapeHTML(job)}</td>
+                    <td>
+                        <span class="status-badge ${getApplicationStatusClass(status)}">
+                            ${escapeHTML(formatStatus(status))}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    function renderUpcomingInterviews(interviews) {
+        const container = document.getElementById("upcomingInterviews");
+        const today = getIndiaToday();
+
+        const upcoming = interviews
+            .filter(interview => {
+                const scheduledDate = String(interview.scheduled_date || "").slice(0, 10);
+                const status = String(interview.status || "").toUpperCase();
+
+                return scheduledDate >= today &&
+                    !["CANCELLED", "NO_SHOW"].includes(status);
+            })
+            .sort((a, b) => {
+                const dateCompare = String(a.scheduled_date).localeCompare(String(b.scheduled_date));
+                if (dateCompare !== 0) return dateCompare;
+
+                return String(a.scheduled_time || "").localeCompare(String(b.scheduled_time || ""));
+            })
+            .slice(0, 5);
+
+        if (upcoming.length === 0) {
+            container.innerHTML = `<div class="dashboard-empty">No upcoming interviews.</div>`;
+            return;
+        }
+
+        container.innerHTML = upcoming.map(interview => `
+            <div class="dashboard-list-item">
+                <strong>${escapeHTML(getValue(interview, ["candidate_name"]))}</strong>
+                <p>${escapeHTML(getValue(interview, ["job_title"]))} · ${escapeHTML(getValue(interview, ["round_type"]))}</p>
+                <p>${escapeHTML(interview.scheduled_date)} ${escapeHTML(interview.scheduled_time || "")}</p>
+                <span class="list-status">${escapeHTML(formatStatus(interview.status))}</span>
+            </div>
+        `).join("");
+    }
+
+    function renderRecentJobs(jobs) {
+        const container = document.getElementById("recentJobs");
+
+        const recent = [...jobs]
+            .sort((a, b) => Number(b.job_id || 0) - Number(a.job_id || 0))
+            .slice(0, 5);
+
+        if (recent.length === 0) {
+            container.innerHTML = `<div class="dashboard-empty">No job openings found.</div>`;
+            return;
+        }
+
+        container.innerHTML = recent.map(job => `
+            <div class="dashboard-list-item">
+                <strong>${escapeHTML(getValue(job, ["job_title"]))}</strong>
+                <p>${escapeHTML(getValue(job, ["company_name"]))} · ${escapeHTML(getValue(job, ["location"]))}</p>
+                <p>Openings: ${escapeHTML(getValue(job, ["openings"], 0))}</p>
+                <span class="list-status">${escapeHTML(formatStatus(job.status))}</span>
+            </div>
+        `).join("");
+    }
+
+    function renderRecentPlacements(placements) {
+        const container = document.getElementById("recentPlacements");
+
+        const recent = [...placements]
+            .sort((a, b) => Number(b.placement_id || 0) - Number(a.placement_id || 0))
+            .slice(0, 5);
+
+        if (recent.length === 0) {
+            container.innerHTML = `<div class="dashboard-empty">No placements found.</div>`;
+            return;
+        }
+
+        container.innerHTML = recent.map(placement => `
+            <div class="dashboard-list-item">
+                <strong>${escapeHTML(getValue(placement, ["candidate_name"]))}</strong>
+                <p>${escapeHTML(getValue(placement, ["job_title"]))} · ${escapeHTML(getValue(placement, ["company_name"]))}</p>
+                <p>Joining: ${escapeHTML(getValue(placement, ["joining_date"]))}</p>
+                <span class="list-status">${escapeHTML(formatStatus(getValue(placement, ["joining_status", "placement_status"])))}</span>
+            </div>
+        `).join("");
+    }
+
+    function setFunnelValue(id, value, maximum) {
+        const safeValue = Number(value) || 0;
+        const safeMaximum = Math.max(Number(maximum) || 0, 1);
+        const percentage = Math.min((safeValue / safeMaximum) * 100, 100);
+
+        document.getElementById(id).style.width = percentage + "%";
+    }
+
+    function updateRecruitmentFunnel(values) {
+        const totalCandidates = Number(values.totalCandidates) || 0;
+        const totalApplications = Number(values.totalApplications) || 0;
+        const totalInterviews = Number(values.totalInterviews) || 0;
+        const selected = Number(values.selected) || 0;
+        const placed = Number(values.placed) || 0;
+
+        const maximum = Math.max(
+            totalCandidates,
+            totalApplications,
+            totalInterviews,
+            selected,
+            placed,
+            1
+        );
+
+        const rows = [
+            ["Candidates", totalCandidates, "funnelCandidates", "funnelCandidatesValue"],
+            ["Applications", totalApplications, "funnelApplications", "funnelApplicationsValue"],
+            ["Interviews", totalInterviews, "funnelInterviews", "funnelInterviewsValue"],
+            ["Selected", selected, "funnelSelected", "funnelSelectedValue"],
+            ["Placed", placed, "funnelPlaced", "funnelPlacedValue"]
+        ];
+
+        rows.forEach((row, index) => {
+            setFunnelValue(row[2], row[1], maximum);
+            document.getElementById(row[3]).textContent = row[1];
+        });
+    }
+
+    function updateDashboardStats(overview, candidates, companies, applications, interviews, placements) {
+        const today = getIndiaToday();
+
+        const activeCompanies = companies.filter(company =>
+            String(company.status || "").toUpperCase() === "ACTIVE"
+        ).length;
+
+        const todayInterviews = interviews.filter(interview =>
+            String(interview.scheduled_date || "").slice(0, 10) === today &&
+            !["CANCELLED", "NO_SHOW"].includes(String(interview.status || "").toUpperCase())
+        ).length;
+
+        const selectedApplications = applications.filter(application =>
+            ["SELECTED", "OFFERED", "PLACED"].includes(
+                String(application.application_status || application.status || "").toUpperCase()
+            )
+        ).length;
+
+        const activeCandidates = candidates.filter(candidate =>
+            !["INACTIVE", "BLOCKED", "REJECTED"].includes(
+                String(candidate.status || "ACTIVE").toUpperCase()
+            )
+        ).length;
+
+        document.getElementById("totalCandidates").textContent =
+            overview.total_candidates ?? candidates.length;
+
+        document.getElementById("activeCandidates").textContent =
+            activeCandidates;
+
+        document.getElementById("activeCompanies").textContent =
+            activeCompanies;
+
+        document.getElementById("openJobs").textContent =
+            overview.open_jobs ?? 0;
+
+        document.getElementById("totalApplications").textContent =
+            overview.total_applications ?? applications.length;
+
+        document.getElementById("todayInterviews").textContent =
+            todayInterviews;
+
+        document.getElementById("selectedCandidates").textContent =
+            selectedApplications;
+
+        document.getElementById("activePlacements").textContent =
+            overview.total_placements ?? placements.length;
+
+        updateRecruitmentFunnel({
+            totalCandidates: overview.total_candidates ?? candidates.length,
+            totalApplications: overview.total_applications ?? applications.length,
+            totalInterviews: interviews.length,
+            selected: selectedApplications,
+            placed: overview.total_placements ?? placements.length
+        });
+    }
+
+    async function loadDashboard() {
+        const button = document.getElementById("refreshDashboard");
+        const errorBox = document.getElementById("dashboardError");
+        const main = document.querySelector(".dashboard-main");
+
+        button.disabled = true;
+        button.textContent = "Refreshing...";
+        errorBox.style.display = "none";
+        main.classList.add("dashboard-loading");
+
+        try {
+            const [
+                overview,
+                candidates,
+                companies,
+                jobs,
+                applications,
+                interviews,
+                placements
+            ] = await Promise.all([
+                fetchAPI("/api/reports/overview"),
+                fetchAPI("/api/candidates"),
+                fetchAPI("/api/companies"),
+                fetchAPI("/api/jobs"),
+                fetchAPI("/api/applications"),
+                fetchAPI("/api/interviews"),
+                fetchAPI("/api/placements")
+            ]);
+
+            updateDashboardStats(
+                overview,
+                candidates,
+                companies,
+                applications,
+                interviews,
+                placements
+            );
+
+            renderRecentApplications(applications);
+            renderUpcomingInterviews(interviews);
+            renderRecentJobs(jobs);
+            renderRecentPlacements(placements);
+
+            document.getElementById("lastUpdated").textContent =
+                "Last updated: " + new Date().toLocaleString("en-IN", {
+                    timeZone: "Asia/Kolkata"
+                });
+
+        } catch (error) {
+            console.error("Dashboard loading error:", error);
+
+            errorBox.textContent =
+                "Unable to refresh dashboard. Please check the server and database connection.";
+
+            errorBox.style.display = "block";
+
+        } finally {
+            button.disabled = false;
+            button.textContent = "Refresh";
+            main.classList.remove("dashboard-loading");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadDashboard);
+</script>
+
+</body>
+</html>

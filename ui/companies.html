@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Companies</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div><h2>RPMS</h2><p>Placement System</p></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html">Candidates</a>
+            <a href="companies.html" class="active">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+        <a href="login.html" class="logout-link">Logout</a>
+    </aside>
+
+    <main class="dashboard-main">
+
+        <header class="topbar">
+            <div>
+                <h1>Companies</h1>
+                <p>Manage recruitment companies and HR contacts</p>
+            </div>
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div><strong>Admin User</strong><p>Administrator</p></div>
+            </div>
+        </header>
+
+        <div class="breadcrumb">
+            <a href="dashboard.html">Dashboard</a> /
+            <span>Companies</span>
+        </div>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Company Directory</h2>
+                    <p>View and manage registered companies</p>
+                </div>
+                <a href="company-form.html" class="action-button">+ Add Company</a>
+            </div>
+
+            <div class="filter-row">
+                <input type="search" id="searchInput"
+                       placeholder="Search company name, code, industry or location...">
+
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                </select>
+            </div>
+
+            <p id="message" role="status">Loading companies...</p>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Company Code</th>
+                            <th>Company Name</th>
+                            <th>Industry</th>
+                            <th>Location</th>
+                            <th>HR Contact</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="companyTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    const tableBody = document.getElementById("companyTableBody");
+    const message = document.getElementById("message");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+
+    let allCompanies = [];
+
+    function addCell(row, value) {
+        const cell = document.createElement("td");
+        cell.textContent = value || "N/A";
+        row.appendChild(cell);
+        return cell;
+    }
+
+    function renderCompanies() {
+        const search = searchInput.value.trim().toLowerCase();
+        const status = statusFilter.value;
+
+        const filtered = allCompanies.filter(company => {
+            const searchable = [
+                company.company_code,
+                company.company_name,
+                company.industry,
+                company.location,
+                company.hr_name,
+                company.hr_email
+            ].join(" ").toLowerCase();
+
+            return searchable.includes(search) &&
+                (!status || company.status === status);
+        });
+
+        tableBody.replaceChildren();
+
+        if (filtered.length === 0) {
+            message.textContent = "No companies found.";
+            return;
+        }
+
+        message.textContent = `${filtered.length} company record(s) found.`;
+
+        filtered.forEach(company => {
+            const row = document.createElement("tr");
+
+            addCell(row, company.company_code);
+            addCell(row, company.company_name);
+            addCell(row, company.industry);
+            addCell(row, company.location);
+
+            const hrCell = document.createElement("td");
+            hrCell.textContent = company.hr_name || company.hr_email || "N/A";
+            row.appendChild(hrCell);
+
+            const statusCell = document.createElement("td");
+            const badge = document.createElement("span");
+            badge.className = "status-badge " +
+                (company.status === "ACTIVE" ? "success" : "");
+            badge.textContent = company.status;
+            statusCell.appendChild(badge);
+            row.appendChild(statusCell);
+
+            const actionCell = document.createElement("td");
+            const editLink = document.createElement("a");
+            editLink.className = "action-button";
+            editLink.textContent = "Edit";
+            editLink.href =
+                `company-form.html?id=${encodeURIComponent(company.company_id)}`;
+            actionCell.appendChild(editLink);
+            row.appendChild(actionCell);
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    async function loadCompanies() {
+        try {
+            const response = await fetch("/api/companies");
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to load companies.");
+            }
+
+            allCompanies = data;
+            renderCompanies();
+
+        } catch (error) {
+            message.textContent = error.message;
+        }
+    }
+
+    searchInput.addEventListener("input", renderCompanies);
+    statusFilter.addEventListener("change", renderCompanies);
+
+    loadCompanies();
+</script>
+
+</body>
+</html>

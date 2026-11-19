@@ -1,0 +1,586 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Reports & Analytics</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .report-bar-item { margin: 22px 0; }
+        .report-bar-label { display:flex; justify-content:space-between; gap:12px; margin-bottom:8px; font-size:14px; }
+        .report-bar-track { height:10px; background:#E9EDF3; border-radius:20px; overflow:hidden; }
+        .report-bar-fill { height:100%; background:linear-gradient(90deg,#17243A,#304D78); border-radius:20px; transition:width .4s ease; }
+        .report-description { color:#65738A; font-size:13px; margin-top:5px; }
+        .report-empty { padding:20px; text-align:center; color:#8995A7; }
+        .report-error { color:#A61B1B; padding:12px; background:#FCEBEC; border:1px solid #F2CACA; border-radius:8px; margin:12px 0; }
+        .report-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; margin-bottom:22px; }
+        .report-card { min-width:0; }
+        .report-card h2 { margin-bottom:5px; }
+        .report-section { margin-bottom:22px; }
+        .report-section .section-heading { margin-bottom:15px; }
+        .report-toolbar-actions { display:flex; flex-wrap:wrap; gap:10px; }
+        .report-refresh { margin-left:10px; }
+        #refreshButton:disabled,#applyFiltersButton:disabled { opacity:.65; cursor:wait; transform:none; }
+        .filter-card { margin-bottom:22px; }
+        .filter-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:18px; }
+        .filter-field { display:flex; flex-direction:column; gap:7px; }
+        .filter-field label { color:#344054; font-size:13px; font-weight:600; }
+        .filter-field input,.filter-field select { width:100%; min-height:42px; padding:9px 11px; border:1px solid #D7DEE8; border-radius:7px; background:#FFFFFF; color:#263449; font:inherit; outline:none; }
+        .filter-field input:focus,.filter-field select:focus { border-color:#304D78; box-shadow:0 0 0 2px rgba(48,77,120,.12); }
+        .filter-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+        .filter-note { color:#65738A; font-size:12px; margin-top:12px; line-height:1.5; }
+        .report-table { width:100%; border-collapse:collapse; min-width:600px; }
+        .report-table th,.report-table td { padding:12px 14px; text-align:left; border-bottom:1px solid #E3E8F0; font-size:13px; }
+        .report-table th { color:#344054; background:#F5F7FA; font-weight:600; white-space:nowrap; }
+        .report-table td { color:#46546A; }
+        .report-table tbody tr:hover { background:#F8FAFC; }
+        .report-status { display:inline-block; padding:5px 9px; border-radius:20px; background:#EAF0F8; color:#304D78; font-size:11px; font-weight:600; white-space:nowrap; }
+        .available-reports { display:grid; gap:14px; }
+        .available-report-item { display:flex; justify-content:space-between; align-items:center; gap:15px; padding:14px; border-bottom:1px solid #E3E8F0; }
+        .available-report-item p { color:#65738A; font-size:13px; margin-top:4px; }
+        @media(max-width:850px) { .report-grid { grid-template-columns:1fr; } .filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:550px) { .filter-grid { grid-template-columns:1fr; } .report-toolbar-actions { width:100%; } .report-toolbar-actions button { flex:1; } .available-report-item { align-items:flex-start; } }
+        @media print {
+            .sidebar,.logout-link,.action-button,.report-refresh,.filter-card,.report-toolbar-actions,.admin-profile { display:none!important; }
+            .dashboard-layout { display:block!important; }
+            .dashboard-main { width:100%!important; padding:10px!important; }
+            .content-card,.stat-card { break-inside:avoid; box-shadow:none!important; }
+            .report-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+            body { background:#FFFFFF!important; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div><h2>RPMS</h2><p>Placement System</p></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html">Candidates</a>
+            <a href="companies.html">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html" class="active">Reports</a>
+        </nav>
+        <a href="login.html" class="logout-link">Logout</a>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div><h1>Reports & Analytics</h1><p>Recruitment statistics and placement performance</p></div>
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div><strong>Admin User</strong><p>Administrator</p></div>
+            </div>
+        </header>
+
+        <section class="page-toolbar">
+            <div><h2>Recruitment Overview</h2><p>Live statistics from recruitment database</p></div>
+            <div class="report-toolbar-actions">
+                <button type="button" class="action-button" id="refreshButton" onclick="loadReports()">Refresh Reports</button>
+                <button type="button" class="action-button report-refresh" onclick="exportReportsCSV()">Export CSV</button>
+                <button type="button" class="action-button report-refresh" onclick="window.print()">Print Report</button>
+            </div>
+        </section>
+
+        <div id="reportError" aria-live="polite"></div>
+
+        <section class="content-card filter-card">
+            <div class="section-heading"><h2>Report Filters</h2></div>
+            <div class="filter-grid">
+                <div class="filter-field"><label for="dateFrom">Date From</label><input type="date" id="dateFrom"></div>
+                <div class="filter-field"><label for="dateTo">Date To</label><input type="date" id="dateTo"></div>
+                <div class="filter-field"><label for="technologyFilter">Technology</label><select id="technologyFilter"><option value="">All Technologies</option></select></div>
+                <div class="filter-field"><label for="companyFilter">Company</label><select id="companyFilter"><option value="">All Companies</option></select></div>
+                <div class="filter-field"><label for="recruiterFilter">Recruiter</label><select id="recruiterFilter"><option value="">All Recruiters</option></select></div>
+                <div class="filter-field"><label for="passingYearFilter">Passing Year</label><select id="passingYearFilter"><option value="">All Passing Years</option></select></div>
+            </div>
+            <div class="filter-actions">
+                <button type="button" class="action-button" id="applyFiltersButton" onclick="applyFilters()">Apply Filters</button>
+                <button type="button" class="action-button" onclick="resetFilters()">Reset Filters</button>
+            </div>
+            <p class="filter-note">Date range uses the relevant event date for each report, such as candidate creation, job posting, application, interview scheduling, offer date or placement creation. Some filters apply only to reports related to candidates, companies or recruiters.</p>
+        </section>
+
+        <section class="stats-grid">
+            <div class="stat-card"><div class="stat-icon">👥</div><p>Total Candidates</p><h2 id="totalCandidates">0</h2></div>
+            <div class="stat-card"><div class="stat-icon">💼</div><p>Open Jobs</p><h2 id="openJobs">0</h2></div>
+            <div class="stat-card"><div class="stat-icon">📄</div><p>Applications</p><h2 id="totalApplications">0</h2></div>
+            <div class="stat-card"><div class="stat-icon">🏆</div><p>Active Placements</p><h2 id="totalPlacements">0</h2></div>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Recruitment Funnel</h2></div>
+            <p class="report-description">Application progress across recruitment stages</p>
+            <div id="recruitmentFunnelReport"><p class="report-empty">Loading report...</p></div>
+        </section>
+
+        <section class="report-grid">
+            <article class="content-card report-card">
+                <h2>Applications by Status</h2>
+                <p class="report-description">Distribution of candidate applications</p>
+                <div id="applicationStatusReport"><p class="report-empty">Loading report...</p></div>
+            </article>
+            <article class="content-card report-card">
+                <h2>Candidates by Technology</h2>
+                <p class="report-description">Candidate technical skill distribution</p>
+                <div id="technologyReport"><p class="report-empty">Loading report...</p></div>
+            </article>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Technology-wise Placement</h2></div>
+            <div class="table-wrapper"><table class="report-table">
+                <thead><tr><th>Technology</th><th>Total Placements</th><th>Average Package (LPA)</th><th>Highest Package (LPA)</th></tr></thead>
+                <tbody id="technologyPlacementTable"><tr><td colspan="4" class="report-empty">Loading report...</td></tr></tbody>
+            </table></div>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Open Jobs by Company</h2></div>
+            <div class="table-wrapper"><table class="report-table">
+                <thead><tr><th>Company</th><th>Open Job Positions</th><th>Total Openings</th><th>Status</th></tr></thead>
+                <tbody id="openJobsTable"><tr><td colspan="4" class="report-empty">Loading report...</td></tr></tbody>
+            </table></div>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Placement Summary by Company</h2></div>
+            <div class="table-wrapper"><table class="report-table">
+                <thead><tr><th>Company</th><th>Placed Candidates</th><th>Average Package (LPA)</th><th>Highest Package (LPA)</th></tr></thead>
+                <tbody id="placementSummaryTable"><tr><td colspan="4" class="report-empty">Loading report...</td></tr></tbody>
+            </table></div>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Recruiter Performance</h2></div>
+            <div class="table-wrapper"><table class="report-table">
+                <thead><tr><th>Recruiter</th><th>Assigned Applications</th><th>Shortlisted</th><th>Interviewed</th><th>Selected</th><th>Offers</th><th>Joined</th></tr></thead>
+                <tbody id="recruiterPerformanceTable"><tr><td colspan="7" class="report-empty">Loading report...</td></tr></tbody>
+            </table></div>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Pending Interviews</h2></div>
+            <div class="table-wrapper"><table class="report-table">
+                <thead><tr><th>Candidate</th><th>Company</th><th>Job Title</th><th>Round</th><th>Interview Date</th><th>Time</th><th>Mode</th><th>Interviewer</th><th>Status</th></tr></thead>
+                <tbody id="pendingInterviewsTable"><tr><td colspan="9" class="report-empty">Loading report...</td></tr></tbody>
+            </table></div>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Open Job Aging</h2></div>
+            <div class="table-wrapper"><table class="report-table">
+                <thead><tr><th>Job Code</th><th>Job Title</th><th>Company</th><th>Location</th><th>Openings</th><th>Posted Date</th><th>Age (Days)</th><th>Aging Category</th></tr></thead>
+                <tbody id="openJobAgingTable"><tr><td colspan="8" class="report-empty">Loading report...</td></tr></tbody>
+            </table></div>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Offer to Joining Conversion</h2></div>
+            <div class="table-wrapper"><table class="report-table">
+                <thead><tr><th>Offer Status</th><th>Total Offers</th><th>Joined Candidates</th><th>Conversion</th></tr></thead>
+                <tbody id="offerConversionTable"><tr><td colspan="4" class="report-empty">Loading report...</td></tr></tbody>
+            </table></div>
+        </section>
+
+        <section class="content-card report-section">
+            <div class="section-heading"><h2>Available Reports</h2></div>
+            <div class="available-reports">
+                <div class="available-report-item"><div><strong>Candidate Count by Technology</strong><p>Technology-wise candidate statistics</p></div><span class="status-badge success">Live</span></div>
+                <div class="available-report-item"><div><strong>Application Count by Status</strong><p>Application progress and status summary</p></div><span class="status-badge success">Live</span></div>
+                <div class="available-report-item"><div><strong>Recruitment Funnel</strong><p>Application-to-joining stage analysis</p></div><span class="status-badge success">Live</span></div>
+                <div class="available-report-item"><div><strong>Technology-wise Placement</strong><p>Technology-wise placement and package analysis</p></div><span class="status-badge success">Live</span></div>
+                <div class="available-report-item"><div><strong>Recruiter Performance</strong><p>Recruiter-wise application and joining performance</p></div><span class="status-badge success">Live</span></div>
+                <div class="available-report-item"><div><strong>Pending Interviews</strong><p>Scheduled and rescheduled interview details</p></div><span class="status-badge success">Live</span></div>
+                <div class="available-report-item"><div><strong>Open Job Aging</strong><p>Age analysis of currently open job positions</p></div><span class="status-badge success">Live</span></div>
+                <div class="available-report-item"><div><strong>Placement Summary by Company</strong><p>Company-wise placement and package analysis</p></div><span class="status-badge success">Live</span></div>
+                <div class="available-report-item"><div><strong>Offer to Joining Conversion</strong><p>Offer status and joining analysis</p></div><span class="status-badge success">Live</span></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+const API = "/api/reports";
+let reportsLoading = false;
+let currentReports = {};
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    })[character]);
+}
+
+function showError(message) {
+    document.getElementById("reportError").innerHTML =
+        `<div class="report-error">${escapeHTML(message)}</div>`;
+}
+
+function clearError() {
+    document.getElementById("reportError").innerHTML = "";
+}
+
+function getActiveFilters() {
+    return {
+        date_from:document.getElementById("dateFrom").value,
+        date_to:document.getElementById("dateTo").value,
+        technology:document.getElementById("technologyFilter").value,
+        company_id:document.getElementById("companyFilter").value,
+        recruiter_id:document.getElementById("recruiterFilter").value,
+        passing_year:document.getElementById("passingYearFilter").value
+    };
+}
+
+function buildQueryString(filters) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key,value]) => {
+        if (value !== "" && value !== null && value !== undefined) params.set(key,value);
+    });
+    const query = params.toString();
+    return query ? `?${query}` : "";
+}
+
+async function fetchJSON(url) {
+    const response = await fetch(url,{
+        method:"GET",
+        cache:"no-store",
+        headers:{"Accept":"application/json"}
+    });
+    let data;
+    try { data = await response.json(); }
+    catch { throw new Error("Server returned an invalid response."); }
+    if (!response.ok) throw new Error(data.error || "Unable to load report data.");
+    return data;
+}
+
+async function loadFilterOptions() {
+    try {
+        const options = await fetchJSON(`${API}/filters`);
+        populateSelect("technologyFilter",options.technologies || [],"value","value","All Technologies");
+        populateSelect("companyFilter",options.companies || [],"company_id","company_name","All Companies");
+        populateSelect("recruiterFilter",options.recruiters || [],"user_id","full_name","All Recruiters");
+        populateSelect("passingYearFilter",options.passing_years || [],"value","value","All Passing Years");
+    } catch(error) {
+        console.error("Filter options error:",error);
+        showError("Unable to load filter options: " + error.message);
+    }
+}
+
+function populateSelect(elementId,rows,valueKey,labelKey,defaultLabel) {
+    const select = document.getElementById(elementId);
+    select.innerHTML = `<option value="">${escapeHTML(defaultLabel)}</option>`;
+    rows.forEach(row => {
+        const value = row[valueKey];
+        if (value === null || value === undefined || value === "") return;
+        const option = document.createElement("option");
+        option.value = String(value);
+        option.textContent = String(row[labelKey] ?? value);
+        select.appendChild(option);
+    });
+}
+
+function renderBars(elementId,rows,labelKey) {
+    const container = document.getElementById(elementId);
+    if (!Array.isArray(rows) || rows.length === 0) {
+        container.innerHTML = '<p class="report-empty">No records available</p>';
+        return;
+    }
+    const maxValue = Math.max(...rows.map(row => Number(row.total) || 0),1);
+    container.innerHTML = rows.map(row => {
+        const total = Number(row.total) || 0;
+        const width = (total / maxValue) * 100;
+        return `
+            <div class="report-bar-item">
+                <div class="report-bar-label">
+                    <span>${escapeHTML(row[labelKey] || "Not Specified")}</span>
+                    <strong>${total}</strong>
+                </div>
+                <div class="report-bar-track">
+                    <div class="report-bar-fill" style="width:${width}%"></div>
+                </div>
+            </div>`;
+    }).join("");
+}
+
+function formatReportDate(rawValue) {
+    if (!rawValue) return "-";
+
+    const parsedDate = new Date(rawValue);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+        return escapeHTML(rawValue);
+    }
+
+    return parsedDate.toLocaleDateString("en-IN",{
+        day:"2-digit",
+        month:"short",
+        year:"numeric",
+        timeZone:"UTC"
+    });
+}
+
+function renderTable(elementId,rows,columns,emptyMessage) {
+    const tbody = document.getElementById(elementId);
+    if (!Array.isArray(rows) || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${columns.length}" class="report-empty">${escapeHTML(emptyMessage || "No records available")}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = rows.map(row => `
+        <tr>
+            ${columns.map(column => {
+                const rawValue = row[column.key];
+                let value = rawValue;
+
+                if (column.format === "number") {
+                    value = Number(rawValue || 0).toLocaleString("en-IN");
+                } else if (column.format === "decimal") {
+                    value = rawValue == null ? "-" : Number(rawValue).toFixed(2);
+                } else if (column.format === "date") {
+                    value = formatReportDate(rawValue);
+                } else if (column.format === "status") {
+                    return `<td><span class="report-status">${escapeHTML(rawValue || "-")}</span></td>`;
+                } else if (column.format === "conversion") {
+                    const total = Number(row.total_offers) || 0;
+                    const joined = Number(row.joined_candidates) || 0;
+                    value = total > 0 ? `${((joined / total) * 100).toFixed(1)}%` : "0.0%";
+                } else if (column.format === "round") {
+                    value = rawValue == null ? "-" : `Round ${rawValue}`;
+                } else {
+                    value = rawValue == null || rawValue === "" ? "-" : rawValue;
+                }
+
+                return `<td>${escapeHTML(value)}</td>`;
+            }).join("")}
+        </tr>
+    `).join("");
+}
+
+function renderOverview(overview) {
+    document.getElementById("totalCandidates").textContent = Number(overview.total_candidates || 0).toLocaleString("en-IN");
+    document.getElementById("openJobs").textContent = Number(overview.open_jobs || 0).toLocaleString("en-IN");
+    document.getElementById("totalApplications").textContent = Number(overview.total_applications || 0).toLocaleString("en-IN");
+    document.getElementById("totalPlacements").textContent = Number(overview.total_placements || 0).toLocaleString("en-IN");
+}
+
+function renderOpenJobs(rows) {
+    const tbody = document.getElementById("openJobsTable");
+    if (!Array.isArray(rows) || rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="report-empty">No company records found</td></tr>';
+        return;
+    }
+    tbody.innerHTML = rows.map(row => {
+        const count = Number(row.open_job_positions) || 0;
+        return `
+            <tr>
+                <td>${escapeHTML(row.company_name)}</td>
+                <td>${count}</td>
+                <td>${Number(row.total_openings) || 0}</td>
+                <td><span class="status-badge ${count > 0 ? "success" : "warning"}">${count > 0 ? "Active" : "No Open Jobs"}</span></td>
+            </tr>`;
+    }).join("");
+}
+
+function renderOfferConversion(rows) {
+    const tbody = document.getElementById("offerConversionTable");
+    if (!Array.isArray(rows) || rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="report-empty">No offer records found</td></tr>';
+        return;
+    }
+    tbody.innerHTML = rows.map(row => {
+        const offers = Number(row.total_offers) || 0;
+        const joined = Number(row.joined_candidates) || 0;
+        const conversion = offers > 0 ? ((joined / offers) * 100).toFixed(1) : "0.0";
+        return `<tr><td>${escapeHTML(row.offer_status)}</td><td>${offers}</td><td>${joined}</td><td>${conversion}%</td></tr>`;
+    }).join("");
+}
+
+function renderReports(reports) {
+    renderOverview(reports.overview || {});
+    renderBars("applicationStatusReport",reports.applications_by_status || [],"application_status");
+    renderBars("technologyReport",reports.candidates_by_technology || [],"technology");
+    renderBars("recruitmentFunnelReport",reports.recruitment_funnel || [],"stage");
+
+    renderTable("technologyPlacementTable",reports.technology_wise_placement || [],[
+        {key:"technology"},
+        {key:"total_placements",format:"number"},
+        {key:"average_package_lpa",format:"decimal"},
+        {key:"highest_package_lpa",format:"decimal"}
+    ],"No technology-wise placement records found");
+
+    renderOpenJobs(reports.open_jobs_by_company || []);
+
+    renderTable("placementSummaryTable",reports.placement_summary_by_company || [],[
+        {key:"company_name"},
+        {key:"placed_candidates",format:"number"},
+        {key:"average_package_lpa",format:"decimal"},
+        {key:"highest_package_lpa",format:"decimal"}
+    ],"No placement records found");
+
+    renderTable("recruiterPerformanceTable",reports.recruiter_performance || [],[
+        {key:"recruiter_name"},
+        {key:"assigned_applications",format:"number"},
+        {key:"shortlisted",format:"number"},
+        {key:"interviewed",format:"number"},
+        {key:"selected",format:"number"},
+        {key:"total_offers",format:"number"},
+        {key:"joined_candidates",format:"number"}
+    ],"No recruiter performance records found");
+
+    renderTable("pendingInterviewsTable",reports.pending_interviews || [],[
+        {key:"candidate_name"},
+        {key:"company_name"},
+        {key:"job_title"},
+        {key:"round_number",format:"round"},
+        {key:"scheduled_date",format:"date"},
+        {key:"scheduled_time"},
+        {key:"mode"},
+        {key:"interviewer_name"},
+        {key:"status",format:"status"}
+    ],"No pending interviews found");
+
+    renderTable("openJobAgingTable",reports.open_job_aging || [],[
+        {key:"job_code"},
+        {key:"job_title"},
+        {key:"company_name"},
+        {key:"location"},
+        {key:"openings",format:"number"},
+        {key:"posted_date",format:"date"},
+        {key:"age_in_days",format:"number"},
+        {key:"aging_bucket",format:"status"}
+    ],"No open jobs found");
+
+    renderOfferConversion(reports.offer_to_joining_conversion || []);
+}
+
+async function loadReports() {
+    if (reportsLoading) return;
+    reportsLoading = true;
+
+    const refreshButton = document.getElementById("refreshButton");
+    const applyButton = document.getElementById("applyFiltersButton");
+    refreshButton.disabled = true;
+    applyButton.disabled = true;
+
+    const originalText = refreshButton.textContent;
+    refreshButton.textContent = "Refreshing...";
+    clearError();
+
+    try {
+        const queryString = buildQueryString(getActiveFilters());
+        const reports = await fetchJSON(`${API}${queryString}`);
+        currentReports = reports;
+        renderReports(reports);
+    } catch(error) {
+        console.error("Reports loading error:",error);
+        showError(error.message || "Unable to load reports. Please try again.");
+    } finally {
+        reportsLoading = false;
+        refreshButton.disabled = false;
+        applyButton.disabled = false;
+        refreshButton.textContent = originalText;
+    }
+}
+
+function applyFilters() {
+    const dateFrom = document.getElementById("dateFrom").value;
+    const dateTo = document.getElementById("dateTo").value;
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+        showError("Date From cannot be after Date To.");
+        return;
+    }
+    loadReports();
+}
+
+function resetFilters() {
+    document.getElementById("dateFrom").value = "";
+    document.getElementById("dateTo").value = "";
+    document.getElementById("technologyFilter").value = "";
+    document.getElementById("companyFilter").value = "";
+    document.getElementById("recruiterFilter").value = "";
+    document.getElementById("passingYearFilter").value = "";
+    clearError();
+    loadReports();
+}
+
+function csvEscape(value) {
+    const text = String(value ?? "");
+    return `"${text.replace(/"/g,'""')}"`;
+}
+
+function exportReportsCSV() {
+    if (!currentReports || Object.keys(currentReports).length === 0) {
+        showError("No report data available to export.");
+        return;
+    }
+
+    const sections = [
+        ["Recruitment Funnel","recruitment_funnel"],
+        ["Applications by Status","applications_by_status"],
+        ["Candidates by Technology","candidates_by_technology"],
+        ["Technology-wise Placement","technology_wise_placement"],
+        ["Open Jobs by Company","open_jobs_by_company"],
+        ["Placement Summary by Company","placement_summary_by_company"],
+        ["Recruiter Performance","recruiter_performance"],
+        ["Pending Interviews","pending_interviews"],
+        ["Open Job Aging","open_job_aging"],
+        ["Offer to Joining Conversion","offer_to_joining_conversion"]
+    ];
+
+    const lines = [
+        csvEscape("RPMS Reports Export"),
+        [csvEscape("Generated At"),csvEscape(new Date().toLocaleString())].join(","),
+        ""
+    ];
+
+    const overview = currentReports.overview || {};
+    lines.push(csvEscape("Recruitment Overview"));
+    lines.push(["Metric","Value"].map(csvEscape).join(","));
+
+    [
+        ["Total Candidates",overview.total_candidates],
+        ["Open Jobs",overview.open_jobs],
+        ["Total Applications",overview.total_applications],
+        ["Active Placements",overview.total_placements]
+    ].forEach(row => lines.push(row.map(csvEscape).join(",")));
+
+    sections.forEach(([title,key]) => {
+        const rows = currentReports[key];
+        lines.push("");
+        lines.push(csvEscape(title));
+
+        if (!Array.isArray(rows) || rows.length === 0) {
+            lines.push(csvEscape("No records available"));
+            return;
+        }
+
+        const headers = Object.keys(rows[0]);
+        lines.push(headers.map(csvEscape).join(","));
+        rows.forEach(row => lines.push(headers.map(header => csvEscape(row[header])).join(",")));
+    });
+
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "RPMS_Reports.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+document.addEventListener("DOMContentLoaded",async function() {
+    await loadFilterOptions();
+    await loadReports();
+});
+</script>
+</body>
+</html>

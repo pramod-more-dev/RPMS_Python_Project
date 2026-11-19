@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPMS | Candidate Details</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">RP</div>
+            <div><h2>RPMS</h2><p>Placement System</p></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="candidates.html" class="active">Candidates</a>
+            <a href="companies.html">Companies</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="applications.html">Applications</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="placement-process.html">Placements</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+        <a href="login.html" class="logout-link">Logout</a>
+    </aside>
+
+    <main class="dashboard-main">
+
+        <header class="topbar">
+            <div>
+                <h1>Candidate Details</h1>
+                <p>View complete candidate profile and academic information</p>
+            </div>
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+                <div><strong>Admin User</strong><p>Administrator</p></div>
+            </div>
+        </header>
+
+        <div class="breadcrumb">
+            <a href="dashboard.html">Dashboard</a> /
+            <a href="candidates.html">Candidates</a> /
+            <span>Candidate Details</span>
+        </div>
+
+        <div id="loadingMessage">Loading candidate details...</div>
+        <div id="errorMessage" style="display:none;"></div>
+
+        <div id="candidateContent" style="display:none;">
+
+            <section class="candidate-profile-card">
+                <div class="candidate-avatar" id="candidateAvatar">RP</div>
+                <div class="candidate-profile-info">
+                    <h2 id="profileName"></h2>
+                    <p>Candidate Code: <span id="profileCode"></span></p>
+                    <span class="status-badge success" id="profileBadge"></span>
+                </div>
+                <div class="candidate-profile-actions">
+                    <a href="#" id="editProfileLink" class="action-button">Edit Profile</a>
+                    <a href="candidates.html" class="cancel-button">Back</a>
+                </div>
+            </section>
+
+            <section class="details-grid">
+
+                <article class="content-card details-card">
+                    <h2>Personal Information</h2>
+                    <div class="detail-row"><span>Full Name</span><strong id="fullName"></strong></div>
+                    <div class="detail-row"><span>Email Address</span><strong id="email"></strong></div>
+                    <div class="detail-row"><span>Mobile Number</span><strong id="mobile"></strong></div>
+                    <div class="detail-row"><span>Candidate Code</span><strong id="candidateCode"></strong></div>
+                </article>
+
+                <article class="content-card details-card">
+                    <h2>Academic Information</h2>
+                    <div class="detail-row"><span>Qualification</span><strong id="qualification"></strong></div>
+                    <div class="detail-row"><span>Passing Year</span><strong id="passingYear"></strong></div>
+                    <div class="detail-row"><span>Percentage</span><strong id="percentage"></strong></div>
+                    <div class="detail-row"><span>Backlog Count</span><strong id="backlogCount"></strong></div>
+                </article>
+
+                <article class="content-card details-card">
+                    <h2>Technical Information</h2>
+                    <div class="detail-row"><span>Primary Technology</span><strong id="technology"></strong></div>
+                    <div class="detail-row"><span>Profile Status</span><strong id="profileStatus" class="green-text"></strong></div>
+                    <div class="detail-row"><span>Placement Status</span><strong id="placementStatus"></strong></div>
+                </article>
+
+                <article class="content-card details-card">
+                    <h2>Additional Information</h2>
+                    <div class="detail-row"><span>Candidate ID</span><strong id="candidateId"></strong></div>
+                    <div class="detail-row"><span>Created At</span><strong id="createdAt"></strong></div>
+                </article>
+
+            </section>
+
+        </div>
+
+    </main>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const candidateId = params.get("id");
+
+    const loadingMessage = document.getElementById("loadingMessage");
+    const errorMessage = document.getElementById("errorMessage");
+    const candidateContent = document.getElementById("candidateContent");
+    const editProfileLink = document.getElementById("editProfileLink");
+
+    if (candidateId && /^\d+$/.test(candidateId)) {
+        editProfileLink.href =
+            `candidate-form.html?id=${encodeURIComponent(candidateId)}`;
+    }
+
+    function showError(message) {
+        loadingMessage.style.display = "none";
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+    }
+
+    function setText(id, value) {
+        document.getElementById(id).textContent =
+            value !== null && value !== undefined && value !== ""
+                ? value
+                : "N/A";
+    }
+
+    async function loadCandidateDetails() {
+        if (!candidateId || !/^\d+$/.test(candidateId)) {
+            showError("Invalid candidate ID. Please return to Candidates.");
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/api/candidates/${encodeURIComponent(candidateId)}`
+            );
+
+            const candidate = await response.json();
+
+            if (!response.ok) {
+                throw new Error(candidate.error || "Candidate not found.");
+            }
+
+            setText("profileName", candidate.full_name);
+            setText("profileCode", candidate.candidate_code);
+
+            setText("candidateAvatar",
+                (candidate.full_name || "RP")
+                    .split(" ")
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map(name => name.charAt(0).toUpperCase())
+                    .join("")
+            );
+
+            setText("profileBadge", candidate.profile_status || "UNKNOWN");
+
+            setText("fullName", candidate.full_name);
+            setText("email", candidate.email);
+            setText("mobile", candidate.mobile);
+            setText("candidateCode", candidate.candidate_code);
+
+            setText("qualification", candidate.qualification);
+            setText("passingYear", candidate.passing_year);
+
+            setText("percentage",
+                candidate.percentage !== null && candidate.percentage !== undefined
+                    ? `${candidate.percentage}%`
+                    : "N/A"
+            );
+
+            setText("backlogCount", candidate.backlog_count);
+            setText("technology", candidate.primary_technology);
+            setText("profileStatus", candidate.profile_status);
+
+            setText("placementStatus",
+                (candidate.placement_status || "UNKNOWN").replaceAll("_", " ")
+            );
+
+            setText("candidateId", candidate.candidate_id);
+            setText("createdAt", candidate.created_at);
+
+            loadingMessage.style.display = "none";
+            candidateContent.style.display = "block";
+
+        } catch (error) {
+            showError(error.message);
+        }
+    }
+
+    loadCandidateDetails();
+</script>
+
+</body>
+</html>

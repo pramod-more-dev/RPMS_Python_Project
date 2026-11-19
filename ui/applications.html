@@ -1,0 +1,969 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPMS | Applications</title>
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+:root {
+    --primary:#17243A;
+    --primary-dark:#22334F;
+    --background:#F4F6FA;
+    --surface:#FFFFFF;
+    --surface-soft:#F8FAFD;
+    --text:#202B3C;
+    --text-secondary:#65738A;
+    --border:#E3E8F0;
+    --border-dark:#D4DCE8;
+    --success:#16A37A;
+    --success-bg:#E7F7F1;
+    --warning:#D99522;
+    --warning-bg:#FFF5E4;
+    --danger:#D94A55;
+    --danger-bg:#FDECEE;
+    --info:#356AE6;
+    --info-bg:#EDF3FF;
+}
+
+* { box-sizing:border-box; }
+
+body {
+    background:var(--background);
+    color:var(--text);
+}
+
+.sidebar { background:var(--primary)!important; }
+.sidebar-brand h2 { color:#fff; }
+.sidebar-brand p { color:#C4CEDD; }
+.sidebar-nav a { color:#D0D9E7; }
+.sidebar-nav a:hover {
+    background:rgba(255,255,255,.08);
+    color:#fff;
+}
+.sidebar-nav a.active {
+    background:var(--primary-dark)!important;
+    color:#fff!important;
+}
+
+.topbar {
+    background:#fff!important;
+    color:var(--text);
+    border-bottom:1px solid var(--border);
+}
+.topbar h2 { color:var(--primary); }
+.topbar p { color:var(--text-secondary); }
+
+.app-content { padding:25px; }
+
+.app-stats {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(150px,1fr));
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.stat-card {
+    background:#fff;
+    padding:24px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    box-shadow:0 2px 8px rgba(23,36,58,.04);
+}
+
+.stat-card p {
+    color:var(--text-secondary);
+    margin:0 0 12px;
+    font-size:13px;
+}
+
+.stat-card h2 {
+    color:var(--primary);
+    font-size:29px;
+    margin:0;
+    font-weight:750;
+}
+
+.app-panel {
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 2px 8px rgba(23,36,58,.04);
+}
+
+.panel-heading {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:22px;
+}
+
+.panel-heading h2 {
+    margin:0;
+    font-size:19px;
+    color:var(--primary);
+}
+
+.record-count {
+    color:var(--text-secondary);
+    font-size:12px;
+}
+
+.app-toolbar {
+    display:grid;
+    grid-template-columns:1.2fr 1.2fr 1.2fr auto;
+    gap:13px;
+    padding:18px;
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    border-radius:10px;
+    margin-bottom:22px;
+}
+
+.app-toolbar input,
+.app-toolbar select,
+.form-control {
+    width:100%;
+    min-height:42px;
+    padding:10px 13px;
+    border:1px solid var(--border-dark);
+    border-radius:8px;
+    background:#fff;
+    color:var(--text);
+    font-size:13px;
+    outline:none;
+}
+
+.app-toolbar input:focus,
+.app-toolbar select:focus,
+.form-control:focus {
+    border-color:var(--primary-dark);
+    box-shadow:0 0 0 3px rgba(34,51,79,.10);
+}
+
+.primary-btn {
+    display:inline-flex;
+    justify-content:center;
+    align-items:center;
+    gap:8px;
+    background:var(--primary);
+    color:#fff;
+    border:1px solid var(--primary);
+    border-radius:8px;
+    padding:11px 18px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.primary-btn:hover {
+    background:var(--primary-dark);
+    border-color:var(--primary-dark);
+}
+
+.primary-btn:disabled {
+    opacity:.6;
+    cursor:not-allowed;
+}
+
+.table-wrap {
+    width:100%;
+    overflow-x:auto;
+}
+
+.app-table {
+    width:100%;
+    border-collapse:collapse;
+    min-width:1000px;
+}
+
+.app-table th {
+    background:var(--primary);
+    color:#fff;
+    padding:15px 13px;
+    text-align:left;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.4px;
+    white-space:nowrap;
+}
+
+.app-table td {
+    padding:16px 13px;
+    border-bottom:1px solid #E9EDF3;
+    color:#39465A;
+    font-size:13px;
+    white-space:nowrap;
+}
+
+.app-table tbody tr:nth-child(even) {
+    background:#FAFBFD;
+}
+
+.app-table tbody tr:hover {
+    background:#F0F3F8;
+}
+
+.pill {
+    display:inline-flex;
+    align-items:center;
+    padding:5px 10px;
+    border-radius:6px;
+    font-size:11px;
+    font-weight:650;
+    white-space:nowrap;
+}
+
+.eligible,
+.shortlisted,
+.selected,
+.success,
+.eligibility-verified,
+.joined {
+    background:var(--success-bg);
+    color:#12805F;
+}
+
+.pending,
+.warning,
+.under-review,
+.interview-scheduled,
+.interviewed,
+.offered {
+    background:var(--warning-bg);
+    color:#98650F;
+}
+
+.applied,
+.info {
+    background:var(--info-bg);
+    color:#2856C5;
+}
+
+.not-eligible,
+.rejected,
+.withdrawn,
+.danger {
+    background:var(--danger-bg);
+    color:#BD3542;
+}
+
+.view-btn {
+    border:none;
+    background:transparent;
+    color:var(--primary);
+    font-size:13px;
+    font-weight:650;
+    cursor:pointer;
+}
+
+.view-btn:hover {
+    color:var(--primary-dark);
+    text-decoration:underline;
+}
+
+.empty-row {
+    text-align:center;
+    padding:35px!important;
+    color:var(--text-secondary)!important;
+}
+
+.modal {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(23,36,58,.58);
+    z-index:1000;
+    align-items:center;
+    justify-content:center;
+    padding:15px;
+}
+
+.modal-box {
+    background:#fff;
+    width:100%;
+    max-width:550px;
+    max-height:90vh;
+    overflow-y:auto;
+    padding:27px;
+    border:1px solid var(--border);
+    border-radius:13px;
+    box-shadow:0 14px 35px rgba(23,36,58,.15);
+}
+
+.modal-box h2 {
+    margin-top:0;
+    color:var(--primary);
+    font-size:19px;
+}
+
+.modal-field { margin:16px 0; }
+
+.modal-field label {
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:7px;
+}
+
+.modal-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:22px;
+}
+
+.secondary-btn {
+    background:#fff;
+    color:var(--text-secondary);
+    border:1px solid var(--border-dark);
+    border-radius:8px;
+    padding:11px 18px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.secondary-btn:hover {
+    background:var(--surface-soft);
+}
+
+.message {
+    margin:12px 0;
+    font-size:13px;
+    font-weight:600;
+}
+
+@media(max-width:900px) {
+    .app-stats { grid-template-columns:repeat(2,1fr); }
+    .app-toolbar { grid-template-columns:1fr 1fr; }
+}
+
+@media(max-width:600px) {
+    .app-content { padding:14px; }
+    .app-panel { padding:15px; }
+    .app-stats { gap:10px; }
+    .stat-card { padding:17px; }
+    .stat-card h2 { font-size:25px; }
+    .app-toolbar {
+        grid-template-columns:1fr;
+        padding:15px;
+    }
+    .panel-heading {
+        align-items:flex-start;
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="dashboard-layout">
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <h2>RPMS</h2>
+        <p>Recruitment & Placement</p>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="candidates.html">Candidates</a>
+        <a href="companies.html">Companies</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html" class="active">Applications</a>
+        <a href="interviews.html">Interviews</a>
+        <a href="placement-process.html">Placements</a>
+        <a href="reports.html">Reports</a>
+    </nav>
+</aside>
+
+<main class="main-content">
+
+<header class="topbar">
+    <div>
+        <h2>Application Management</h2>
+        <p>Track candidate applications and recruitment progress</p>
+    </div>
+    <button class="primary-btn" onclick="openCreateModal()">+ Add Application</button>
+</header>
+
+<section class="app-content">
+
+    <div class="app-stats">
+        <div class="stat-card">
+            <p>Total Applications</p>
+            <h2 id="totalCount">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>Pending Review</p>
+            <h2 id="pendingCount">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>Shortlisted</p>
+            <h2 id="shortlistedCount">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>Selected</p>
+            <h2 id="selectedCount">0</h2>
+        </div>
+    </div>
+
+    <div class="app-panel">
+
+        <div class="panel-heading">
+            <h2>All Applications</h2>
+            <span class="record-count" id="recordCount">0 Records</span>
+        </div>
+
+        <div class="app-toolbar">
+            <input type="search" id="searchInput"
+                   placeholder="Search candidate or application ID...">
+
+            <select id="jobFilter">
+                <option value="">All Job Roles</option>
+            </select>
+
+            <select id="statusFilter">
+                <option value="">All Status</option>
+                <option value="APPLIED">Applied</option>
+                <option value="UNDER_REVIEW">Under Review</option>
+                <option value="ELIGIBILITY_VERIFIED">Eligibility Verified</option>
+                <option value="SHORTLISTED">Shortlisted</option>
+                <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
+                <option value="INTERVIEWED">Interviewed</option>
+                <option value="SELECTED">Selected</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="OFFERED">Offered</option>
+                <option value="JOINED">Joined</option>
+                <option value="WITHDRAWN">Withdrawn</option>
+            </select>
+
+            <button class="primary-btn" onclick="loadApplications()">Search</button>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div class="table-wrap">
+            <table class="app-table">
+                <thead>
+                    <tr>
+                        <th>APPLICATION ID</th>
+                        <th>CANDIDATE</th>
+                        <th>JOB ROLE</th>
+                        <th>COMPANY</th>
+                        <th>APPLIED DATE</th>
+                        <th>ELIGIBILITY</th>
+                        <th>APPLICATION STATUS</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="applicationsBody">
+                    <tr>
+                        <td colspan="8" class="empty-row">Loading applications...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</section>
+</main>
+</div>
+
+<div class="modal" id="createModal">
+    <div class="modal-box">
+        <h2>Create Application</h2>
+
+        <form id="createForm">
+
+            <div class="modal-field">
+                <label for="candidateSelect">Select Candidate *</label>
+                <select id="candidateSelect" class="form-control" required>
+                    <option value="">Loading candidates...</option>
+                </select>
+            </div>
+
+            <div class="modal-field">
+                <label for="jobSelect">Select Job *</label>
+                <select id="jobSelect" class="form-control" required>
+                    <option value="">Loading jobs...</option>
+                </select>
+            </div>
+
+            <div class="modal-field">
+                <label for="sourceSelect">Application Source</label>
+                <select id="sourceSelect" class="form-control">
+                    <option value="PORTAL">Portal</option>
+                    <option value="COLLEGE">College</option>
+                    <option value="REFERRAL">Referral</option>
+                    <option value="WALK_IN">Walk In</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="primary-btn" id="createButton">
+                    Create Application
+                </button>
+
+                <button type="button" class="secondary-btn" onclick="closeCreateModal()">
+                    Cancel
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="viewModal">
+    <div class="modal-box">
+        <h2>Application Details</h2>
+
+        <div id="applicationDetails"></div>
+
+        <div class="modal-field">
+            <label for="updateStatus">Update Application Status</label>
+            <select id="updateStatus" class="form-control">
+                <option value="APPLIED">Applied</option>
+                <option value="UNDER_REVIEW">Under Review</option>
+                <option value="ELIGIBILITY_VERIFIED">Eligibility Verified</option>
+                <option value="SHORTLISTED">Shortlisted</option>
+                <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
+                <option value="INTERVIEWED">Interviewed</option>
+                <option value="SELECTED">Selected</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="OFFERED">Offered</option>
+                <option value="JOINED">Joined</option>
+                <option value="WITHDRAWN">Withdrawn</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+            <button class="primary-btn" id="updateStatusButton" onclick="saveStatus()">
+                Update Status
+            </button>
+            <button class="secondary-btn" onclick="closeViewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let allApplications = [];
+let currentApplicationId = null;
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+function displayStatus(status) {
+    return String(status || "").replaceAll("_", " ");
+}
+
+function statusClass(status) {
+    return String(status || "").toLowerCase().replaceAll("_", "-");
+}
+
+function formatDate(value) {
+    if (!value) return "-";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return value;
+
+    return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+function updateStatistics(applications) {
+    document.getElementById("totalCount").textContent =
+        applications.length;
+
+    document.getElementById("pendingCount").textContent =
+        applications.filter(a =>
+            ["APPLIED", "UNDER_REVIEW", "ELIGIBILITY_VERIFIED"].includes(
+                a.application_status
+            )
+        ).length;
+
+    document.getElementById("shortlistedCount").textContent =
+        applications.filter(a =>
+            a.application_status === "SHORTLISTED"
+        ).length;
+
+    document.getElementById("selectedCount").textContent =
+        applications.filter(a =>
+            a.application_status === "SELECTED"
+        ).length;
+}
+
+function renderApplications(applications) {
+    const body = document.getElementById("applicationsBody");
+
+    document.getElementById("recordCount").textContent =
+        `${applications.length} Records`;
+
+    if (!applications.length) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty-row">No applications found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    body.innerHTML = applications.map(a => `
+        <tr>
+            <td><strong>${escapeHTML(a.application_code)}</strong></td>
+            <td>${escapeHTML(a.candidate_name)}</td>
+            <td>${escapeHTML(a.job_title)}</td>
+            <td>${escapeHTML(a.company_name)}</td>
+            <td>${formatDate(a.applied_at)}</td>
+            <td>
+                <span class="pill ${
+                    a.eligibility_status === "ELIGIBLE"
+                        ? "eligible"
+                        : a.eligibility_status === "NOT_ELIGIBLE"
+                            ? "not-eligible"
+                            : "pending"
+                }">
+                    ${escapeHTML(displayStatus(a.eligibility_status))}
+                </span>
+            </td>
+            <td>
+                <span class="pill ${statusClass(a.application_status)}">
+                    ${escapeHTML(displayStatus(a.application_status))}
+                </span>
+            </td>
+            <td>
+                <button class="view-btn"
+                    onclick="viewApplication(${Number(a.application_id)})">
+                    View
+                </button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+async function loadApplications() {
+    const body = document.getElementById("applicationsBody");
+    const message = document.getElementById("message");
+
+    body.innerHTML = `
+        <tr>
+            <td colspan="8" class="empty-row">Loading applications...</td>
+        </tr>
+    `;
+
+    message.textContent = "";
+
+    const search = document.getElementById("searchInput").value.trim();
+    const status = document.getElementById("statusFilter").value;
+
+    const params = new URLSearchParams();
+
+    if (search) params.set("search", search);
+    if (status) params.set("status", status);
+
+    try {
+        const response = await fetch(
+            `/api/applications?${params.toString()}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || "Unable to load applications"
+            );
+        }
+
+        allApplications = data;
+        updateStatistics(data);
+
+        const jobId = document.getElementById("jobFilter").value;
+
+        const filtered = jobId
+            ? data.filter(a => String(a.job_id) === jobId)
+            : data;
+
+        renderApplications(filtered);
+
+    } catch (error) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty-row">
+                    Unable to load applications.
+                </td>
+            </tr>
+        `;
+
+        message.textContent = error.message;
+        message.style.color = "#B4232B";
+    }
+}
+
+async function loadDropdowns() {
+    const [candidateResponse, jobResponse] = await Promise.all([
+        fetch("/api/candidates"),
+        fetch("/api/jobs?status=OPEN")
+    ]);
+
+    const candidates = await candidateResponse.json();
+    const jobs = await jobResponse.json();
+
+    if (!candidateResponse.ok) {
+        throw new Error(
+            candidates.error || "Unable to load candidates"
+        );
+    }
+
+    if (!jobResponse.ok) {
+        throw new Error(jobs.error || "Unable to load jobs");
+    }
+
+    const candidateSelect =
+        document.getElementById("candidateSelect");
+
+    candidateSelect.innerHTML =
+        '<option value="">Select Candidate</option>';
+
+    candidates.forEach(c => {
+        const option = document.createElement("option");
+        option.value = c.candidate_id;
+        option.textContent =
+            `${c.full_name} (${c.candidate_code})`;
+
+        candidateSelect.appendChild(option);
+    });
+
+    const jobSelect = document.getElementById("jobSelect");
+    const jobFilter = document.getElementById("jobFilter");
+
+    jobSelect.innerHTML =
+        '<option value="">Select Job</option>';
+
+    jobFilter.innerHTML =
+        '<option value="">All Job Roles</option>';
+
+    jobs.forEach(j => {
+        const option = document.createElement("option");
+        option.value = j.job_id;
+        option.textContent =
+            `${j.job_title} - ${j.location}`;
+
+        jobSelect.appendChild(option);
+
+        const filterOption = document.createElement("option");
+        filterOption.value = j.job_id;
+        filterOption.textContent = j.job_title;
+
+        jobFilter.appendChild(filterOption);
+    });
+}
+
+function openCreateModal() {
+    document.getElementById("createModal").style.display = "flex";
+}
+
+function closeCreateModal() {
+    document.getElementById("createModal").style.display = "none";
+    document.getElementById("createForm").reset();
+}
+
+document.getElementById("createForm").addEventListener(
+    "submit",
+    async event => {
+        event.preventDefault();
+
+        const button = document.getElementById("createButton");
+
+        button.disabled = true;
+        button.textContent = "Creating...";
+
+        const payload = {
+            candidate_id: Number(
+                document.getElementById("candidateSelect").value
+            ),
+            job_id: Number(
+                document.getElementById("jobSelect").value
+            ),
+            source: document.getElementById("sourceSelect").value
+        };
+
+        try {
+            const response = await fetch("/api/applications", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error || "Unable to create application"
+                );
+            }
+
+            closeCreateModal();
+            await loadApplications();
+
+            alert(
+                `Application created successfully!\n` +
+                `Eligibility: ${result.eligibility_status}\n` +
+                `Reason: ${result.eligibility_reason}`
+            );
+
+        } catch (error) {
+            alert(error.message);
+
+        } finally {
+            button.disabled = false;
+            button.textContent = "Create Application";
+        }
+    }
+);
+
+function viewApplication(id) {
+    const application = allApplications.find(
+        a => Number(a.application_id) === Number(id)
+    );
+
+    if (!application) return;
+
+    currentApplicationId = id;
+
+    document.getElementById("applicationDetails").innerHTML = `
+        <p><strong>Application ID:</strong>
+            ${escapeHTML(application.application_code)}</p>
+        <p><strong>Candidate:</strong>
+            ${escapeHTML(application.candidate_name)}</p>
+        <p><strong>Job Role:</strong>
+            ${escapeHTML(application.job_title)}</p>
+        <p><strong>Company:</strong>
+            ${escapeHTML(application.company_name)}</p>
+        <p><strong>Applied Date:</strong>
+            ${formatDate(application.applied_at)}</p>
+        <p><strong>Eligibility:</strong>
+            ${escapeHTML(displayStatus(application.eligibility_status))}</p>
+        <p><strong>Eligibility Reason:</strong>
+            ${escapeHTML(application.eligibility_reason || "-")}</p>
+        <p><strong>Source:</strong>
+            ${escapeHTML(application.source || "-")}</p>
+    `;
+
+    document.getElementById("updateStatus").value =
+        application.application_status;
+
+    document.getElementById("viewModal").style.display = "flex";
+}
+
+function closeViewModal() {
+    document.getElementById("viewModal").style.display = "none";
+}
+
+async function saveStatus() {
+    if (!currentApplicationId) return;
+
+    const status = document.getElementById("updateStatus").value;
+    const button = document.getElementById("updateStatusButton");
+
+    button.disabled = true;
+    button.textContent = "Updating...";
+
+    try {
+        const response = await fetch(
+            `/api/applications/${currentApplicationId}/status`,
+            {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    application_status: status
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error || "Unable to update status"
+            );
+        }
+
+        closeViewModal();
+        await loadApplications();
+
+        alert(result.message || "Application status updated successfully.");
+
+    } catch (error) {
+        alert(error.message);
+
+    } finally {
+        button.disabled = false;
+        button.textContent = "Update Status";
+    }
+}
+
+document.getElementById("searchInput").addEventListener(
+    "keydown",
+    event => {
+        if (event.key === "Enter") {
+            loadApplications();
+        }
+    }
+);
+
+document.getElementById("statusFilter").addEventListener(
+    "change",
+    loadApplications
+);
+
+document.getElementById("jobFilter").addEventListener(
+    "change",
+    () => {
+        const jobId = document.getElementById("jobFilter").value;
+
+        const filtered = jobId
+            ? allApplications.filter(
+                a => String(a.job_id) === jobId
+            )
+            : allApplications;
+
+        renderApplications(filtered);
+    }
+);
+
+async function initialize() {
+    try {
+        await loadDropdowns();
+        await loadApplications();
+
+    } catch (error) {
+        document.getElementById("message").textContent =
+            error.message;
+
+        document.getElementById("message").style.color =
+            "#B4232B";
+    }
+}
+
+initialize();
+</script>
+
+</body>
+</html>
